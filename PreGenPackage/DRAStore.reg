@@ -1,0 +1,55 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\IoT\Policies\Microsoft\SystemCertificates\FVE]
+
+[HKEY_LOCAL_MACHINE\IoT\Policies\Microsoft\SystemCertificates\FVE\Certificates]
+
+[HKEY_LOCAL_MACHINE\IoT\Policies\Microsoft\SystemCertificates\FVE\Certificates\CEEE209A89DF4F597663C384327173DB2129759A]
+"Blob"=hex:03,00,00,00,01,00,00,00,14,00,00,00,ce,ee,20,9a,89,df,4f,59,76,63,\
+  c3,84,32,71,73,db,21,29,75,9a,20,00,00,00,01,00,00,00,0a,03,00,00,30,82,03,\
+  06,30,82,01,ee,a0,03,02,01,02,02,10,1d,ae,e2,b1,69,dd,6c,ba,41,a4,79,97,57,\
+  4c,0a,1d,30,0d,06,09,2a,86,48,86,f7,0d,01,01,05,05,00,30,1a,31,18,30,16,06,\
+  03,55,04,03,0c,0f,50,46,58,42,69,74,4c,6f,63,6b,65,72,44,52,41,30,1e,17,0d,\
+  31,35,30,39,30,39,31,35,33,39,32,37,5a,17,0d,31,36,30,39,30,39,31,35,35,39,\
+  32,37,5a,30,1a,31,18,30,16,06,03,55,04,03,0c,0f,50,46,58,42,69,74,4c,6f,63,\
+  6b,65,72,44,52,41,30,82,01,22,30,0d,06,09,2a,86,48,86,f7,0d,01,01,01,05,00,\
+  03,82,01,0f,00,30,82,01,0a,02,82,01,01,00,9d,23,ee,47,1f,ef,00,16,3e,f2,a0,\
+  d6,4a,59,62,c0,ee,2c,3c,af,d0,62,77,c1,60,f8,11,20,f0,59,6f,47,29,a6,68,c8,\
+  18,9a,6a,df,5e,22,e0,c9,93,3c,cf,51,5a,43,c0,b9,25,a1,aa,32,09,6c,2a,0b,77,\
+  ff,ba,9b,08,d0,57,fd,73,fb,a7,62,51,8b,6e,da,d2,7b,59,20,9b,7e,96,85,ce,28,\
+  80,cb,f1,7b,c8,4c,41,7c,9a,07,9a,d9,9f,26,90,81,9b,2c,bd,6c,00,4e,df,68,6b,\
+  c0,59,81,22,50,20,ca,d3,73,45,e5,3a,82,cd,eb,74,1f,67,68,c0,7a,ec,2d,a6,07,\
+  8b,76,03,92,27,c7,93,fe,99,0c,b3,25,6e,c0,76,05,fa,80,e4,8d,28,f7,a5,dc,bc,\
+  71,1e,ca,ce,db,b8,4f,27,8a,70,ed,c7,5b,51,6b,7b,b2,8d,2a,9b,09,c0,43,aa,68,\
+  8d,6b,99,e3,28,3f,b1,a3,46,e3,04,a4,5d,87,c6,3f,1f,23,37,25,f8,9e,01,ed,14,\
+  a2,6e,02,ab,eb,c5,4b,44,1e,ef,3c,69,df,b9,b8,1d,a2,f6,ed,ad,b4,92,f1,4d,bd,\
+  5f,6a,2e,b0,41,e4,aa,d6,43,4b,d1,01,cc,f4,3c,e1,70,b8,3c,6f,02,03,01,00,01,\
+  a3,48,30,46,30,0e,06,03,55,1d,0f,01,01,ff,04,04,03,02,05,20,30,15,06,03,55,\
+  1d,25,04,0e,30,0c,06,0a,2b,06,01,04,01,82,37,43,01,02,30,1d,06,03,55,1d,0e,\
+  04,16,04,14,ac,34,df,f6,98,ab,01,b6,18,6b,ef,43,9e,0a,b2,4b,c1,08,30,76,30,\
+  0d,06,09,2a,86,48,86,f7,0d,01,01,05,05,00,03,82,01,01,00,63,32,dd,09,64,ca,\
+  24,50,4f,68,13,73,65,59,17,e8,f1,b9,52,b7,27,18,d8,25,79,5f,20,00,d8,9a,a9,\
+  d8,03,b4,4f,af,c3,ed,4a,29,aa,07,56,92,32,9b,e4,27,ca,94,6e,2b,45,bf,f5,1d,\
+  69,c7,0c,52,a5,8b,ab,60,bc,5d,af,1d,19,85,82,e6,3a,49,48,2b,ce,20,84,64,a4,\
+  c3,39,de,05,53,d6,c0,24,e1,10,64,9c,a1,36,c8,d3,f0,c0,c5,fa,70,19,fe,72,b0,\
+  57,69,c7,80,e2,62,87,7d,6f,c3,ca,8c,db,14,fa,cd,86,ac,c9,f6,58,9f,8b,9a,e4,\
+  a0,8c,c7,07,82,65,42,f8,6e,3b,20,7e,8f,4f,2f,44,cb,43,46,8b,a0,dd,60,be,f8,\
+  80,b4,98,78,84,35,4a,50,51,8c,e4,a4,ab,d4,40,39,a8,55,11,d2,1d,5b,ed,98,e6,\
+  45,bc,12,db,d3,13,3c,30,e8,aa,06,29,47,d8,6b,2b,57,de,ae,61,b2,36,bc,b8,69,\
+  a1,d5,d2,2e,cc,c8,b5,bd,e4,77,7c,c6,5d,44,46,81,b0,5a,f6,34,d8,6b,18,dd,2f,\
+  b9,ea,55,6e,d1,2d,65,10,79,ef,f1,5b,b1,d4,af,a8,3a,ae,22,de,9d,28,06,4f,92
+
+[HKEY_LOCAL_MACHINE\IoT\Policies\Microsoft\SystemCertificates\FVE\CRLs]
+
+[HKEY_LOCAL_MACHINE\IoT\Policies\Microsoft\SystemCertificates\FVE\CTLs]
+
+[HKEY_LOCAL_MACHINE\IoT\Policies\Microsoft\FVE]
+"OSManageDRA"=dword:00000001
+"FDVManageDRA"=dword:00000001
+"RDVManageDRA"=dword:00000001
+"IdentificationField"=dword:00000001
+"IdentificationFieldString"="BitLocker"
+"SecondaryIdentificationField"="BitLocker"
+"SelfSignedCertificates"=dword:00000001
+"RDVDeviceBinding"=dword:00000001
+"OSEnablePrebootInputProtectorsOnSlates"=dword:00000001
