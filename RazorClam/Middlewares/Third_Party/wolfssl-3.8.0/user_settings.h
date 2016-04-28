@@ -1,0 +1,27 @@
+#define FREERTOS
+#define WOLFSSL_USER_IO
+#define NO_WRITEV
+#define NO_SESSION_CACHE
+#define NO_WOLFSSL_DIR
+#define DEBUG_WOLFSSL
+#define WOLFSSL_LOG_PRINTF
+
+#ifndef WOLFSSL_NO_VERIFYSERVER
+	#define TIME_OVERRIDES
+	#define XTIME time
+	#define XGMTIME localtime
+#endif
+
+#define CUSTOM_RAND_GENERATE
+#define STM32F4_RNG
+#define NO_OLD_RNGNAME
+
+#define SIZEOF_LONG_LONG 8
+#define HAVE_ECC
+//#define NO_MD5
+#define WOLFSSL_SHA384
+#define WOLFSSL_SHA512
+#define WOLFSSL_AES_DIRECT
+#define WOLFSSL_KEY_GEN
+#define WOLFSSL_LWIP
+
