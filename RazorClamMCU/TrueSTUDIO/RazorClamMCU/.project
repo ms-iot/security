@@ -110,17 +110,17 @@
 		<link>
 			<name>Drivers/System</name>
 			<type>2</type>
-			<location>C:/Users/StefanTh/Source/Atollic/RazorClamMCU/Drivers/System</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/System</locationURI>
 		</link>
 		<link>
 			<name>Drivers/TisTpmDrv</name>
 			<type>2</type>
-			<location>C:/Users/StefanTh/Source/Atollic/RazorClamMCU/Drivers/TisTpmDrv</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/TisTpmDrv</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/CryptoAPI</name>
 			<type>2</type>
-			<location>C:/Users/StefanTh/Source/Atollic/RazorClamMCU/Middlewares/CryptoAPI</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Middlewares/CryptoAPI</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FreeRTOS</name>
@@ -135,17 +135,17 @@
 		<link>
 			<name>Middlewares/NTPClient</name>
 			<type>2</type>
-			<location>C:/Users/StefanTh/Source/Atollic/RazorClamMCU/Middlewares/Third_Party/NTPClient</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Middlewares/Third_Party/NTPClient</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/Urchin</name>
 			<type>2</type>
-			<location>C:/Users/StefanTh/Source/Atollic/RazorClamMCU/Middlewares/Urchin</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Middlewares/Urchin</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/WolfSSL</name>
 			<type>2</type>
-			<location>C:/Users/StefanTh/Source/Atollic/RazorClamMCU/Middlewares/Third_Party/wolfssl-3.8.0</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.8.0</locationURI>
 		</link>
 		<link>
 			<name>Application/TrueSTUDIO/startup_stm32f429xx.s</name>
@@ -196,6 +196,51 @@
 			<name>Application/User/stm32f4xx_it.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/stm32f4xx_it.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/ethernetif.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/ethernetif.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/FreeRTOSConfig.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/FreeRTOSConfig.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/lwip.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/lwip.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/lwipopts.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/lwipopts.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/mxconstants.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/mxconstants.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/RazorClam.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/RazorClam.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/stm32f4xx_hal_conf.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/stm32f4xx_hal_conf.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/stm32f4xx_it.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/stm32f4xx_it.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/TpmUtil.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Inc/TpmUtil.h</locationURI>
 		</link>
 		<link>
 			<name>Drivers/CMSIS/system_stm32f4xx.c</name>
