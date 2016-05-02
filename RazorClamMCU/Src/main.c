@@ -181,6 +181,7 @@ int main(void)
       }
   }
 
+  TpmUtilLoadPersistedData();
   if((retVal = RazorClam()) != TPM_RC_SUCCESS)
   {
       printf("RazorClam() failed.\r\n");

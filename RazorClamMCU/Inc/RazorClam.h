@@ -13,6 +13,8 @@
 #define TPM_PLATFORM_LOCKDOWN_POLICY_NV_INDEX (0x01000000 | (TPM_SECUREBOOT_NV_RANGE << 8))
 #define PLATFORM_POLICY_MAX_ENTRIES                   10
 
+#define ADDR_FLASH_SECTOR_23 ((uint32_t)0x081E0000)
+
 typedef struct {
     unsigned int wipeLockoutAuth             : 1;
     unsigned int wipeEndorsementAuth         : 1;
@@ -96,6 +98,8 @@ typedef struct
 
 extern RazorClamVolatileDataType volatileData;
 extern RazorClamPersistentDataType persistedData;
+extern uint32_t fakeAppPayloadSize;
+extern uint8_t* fakeAppPayload;
 
 extern "C" uint32_t RazorClam(void);
 void PrintBuffer(char* label, uint8_t* dataPtr, uint32_t dataSize);

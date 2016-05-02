@@ -13,7 +13,82 @@
 #include "RazorClam.h"
 #include "TpmUtil.h"
 
-extern uint8_t fakeAppPayload[213];
+#define ADDR_FLASH_SECTOR_23 ((uint32_t)0x081E0000)
+
+//extern uint8_t fakeAppPayload[213];
+
+void
+TpmUtilStorePersistedData(void)
+{
+    printf("Persisting new configuration in MCU flash");
+    HAL_FLASH_Unlock();
+    FLASH_Erase_Sector(FLASH_SECTOR_23, FLASH_VOLTAGE_RANGE_3);
+    for(uint32_t n = 0; n < sizeof(persistedData); n++)
+    {
+        if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, ADDR_FLASH_SECTOR_23 + n, ((uint8_t*)&persistedData)[n]) != HAL_OK)
+        {
+            printf("Flash Write Error @ 0x%08x\r\n", ADDR_FLASH_SECTOR_23 + n);
+        }
+    }
+    HAL_FLASH_Lock();
+}
+
+void
+TpmUtilLoadPersistedData(void)
+{
+    printf("Retrieving configuration from MCU flash");
+    memcpy((uint8_t*)&persistedData, (void*)ADDR_FLASH_SECTOR_23, sizeof(persistedData));
+    fakeAppPayloadSize = *((uint32_t*)(ADDR_FLASH_SECTOR_23 + persistedData.size));
+    fakeAppPayload = ((uint8_t*)(ADDR_FLASH_SECTOR_23 + persistedData.size + sizeof(uint32_t)));
+}
+
+static UINT32
+SetTpmAuthValues(void)
+{
+    DEFINE_CALL_BUFFERS;
+    UINT32 result = TPM_RC_SUCCESS;
+    union
+    {
+        HierarchyChangeAuth_In hierarchyChangeAuth;
+    } in;
+    union
+    {
+        HierarchyChangeAuth_Out hierarchyChangeAuth;
+    } out;
+
+    INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
+    parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle = TPM_RH_LOCKOUT;
+    UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle, parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.name);
+    parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle);
+    in.hierarchyChangeAuth.newAuth.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.hierarchyChangeAuth.newAuth.t.buffer);
+    EXECUTE_TPM_CALL(FALSE, TPM2_HierarchyChangeAuth);
+    persistedData.lockoutAuth = in.hierarchyChangeAuth.newAuth;
+
+    INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
+    parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle = TPM_RH_ENDORSEMENT;
+    UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle, parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.name);
+    parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle);
+    in.hierarchyChangeAuth.newAuth.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.hierarchyChangeAuth.newAuth.t.buffer);
+    EXECUTE_TPM_CALL(FALSE, TPM2_HierarchyChangeAuth);
+    persistedData.endorsementAuth = in.hierarchyChangeAuth.newAuth;
+
+    INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
+    parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle = TPM_RH_OWNER;
+    UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle, parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.name);
+    parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle);
+    in.hierarchyChangeAuth.newAuth.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.hierarchyChangeAuth.newAuth.t.buffer);
+    EXECUTE_TPM_CALL(FALSE, TPM2_HierarchyChangeAuth);
+    persistedData.storageAuth = in.hierarchyChangeAuth.newAuth;
+
+Cleanup:
+    if(result != TPM_RC_SUCCESS)
+    {
+        // Copy the EKSeeded session back out in case of an error
+        sessionTable[0].attributes = volatileData.ekSeededSession.attributes;
+        volatileData.ekSeededSession = sessionTable[0];
+    }
+    return TPM_RC_SUCCESS;
+}
 
 static uint32_t
 TpmUtilCreateAuthority(
@@ -63,7 +138,6 @@ TpmUtilCreateAuthority(
     in.createPrimary.inPublic.t.publicArea.unique.ecc.x.t.size = CryptHashBlock(TPM_ALG_SHA256, strlen(authorityName), (BYTE*)authorityName, sizeof(in.createPrimary.inPublic.t.publicArea.unique.ecc.x.t.buffer), in.createPrimary.inPublic.t.publicArea.unique.ecc.x.t.buffer);
     EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
     *sigkey = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
-    PrintTPM2BInitializer(authorityName, (TPM2B*)&sigkey->obj.name);
 
 Cleanup:
     return result;
@@ -204,7 +278,17 @@ TpmUtilSignAppPayload(
         result = TPM_RC_FAILURE;
         goto Cleanup;
     }
-    PrintBuffer("fakeAppPayload", pbCmd, sizeof(pbCmd) - size);
+
+    // Write the fakeAppPayload to flash
+    HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, ADDR_FLASH_SECTOR_23 + sizeof(persistedData), (uint32_t)(sizeof(pbCmd) - size));
+    for(uint32_t n = 0; n < (sizeof(pbCmd) - size); n++)
+    {
+        if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, ADDR_FLASH_SECTOR_23 + sizeof(persistedData) + sizeof(uint32_t) + n, pbCmd[n]) != HAL_OK)
+        {
+            printf("Flash Write Error @ 0x%08x\r\n", ADDR_FLASH_SECTOR_23 + n);
+        }
+    }
+
 
 Cleanup:
     return result;
@@ -562,38 +646,29 @@ TpmUtilCreateSrk(
     UINT32 result = TPM_RC_SUCCESS;
     union
     {
-        ReadPublic_In readPublicIn;
         CreatePrimary_In createPrimaryIn;
         EvictControl_In evictControlIn;
     } in;
     union
     {
-        ReadPublic_Out readPublicOut;
         CreatePrimary_Out createPrimaryOut;
         EvictControl_Out evictControlOut;
     } out;
     ANY_OBJECT srk = {0};
 
-    INITIALIZE_CALL_BUFFERS(TPM2_ReadPublic, &in.readPublicIn, &out.readPublicOut);
-    parms.objectTableIn[TPM2_ReadPublic_HdlIn_PublicKey].generic.handle = TPM_20_SRK_HANDLE;
-    TRY_TPM_CALL(FALSE, TPM2_ReadPublic);
+    // Create the SRK
+    INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &in.createPrimaryIn, &out.createPrimaryOut);
+    parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_OWNER;
+    SetSrkTemplate(&in.createPrimaryIn.inPublic);
+    EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
+    srk = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
 
-    if(result != TPM_RC_SUCCESS)
-    {
-        // Create the SRK
-        INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &in.createPrimaryIn, &out.createPrimaryOut);
-        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_OWNER;
-        SetSrkTemplate(&in.createPrimaryIn.inPublic);
-        EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
-        srk = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
-
-        // ...and persist it.
-        INITIALIZE_CALL_BUFFERS(TPM2_EvictControl, &in.evictControlIn, &out.evictControlOut);
-        parms.objectTableIn[TPM2_EvictControl_HdlIn_Auth].entity.handle = TPM_RH_OWNER;
-        parms.objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle] = srk;
-        in.evictControlIn.persistentHandle = TPM_20_SRK_HANDLE;
-        EXECUTE_TPM_CALL(FALSE, TPM2_EvictControl);
-    }
+    // ...and persist it.
+    INITIALIZE_CALL_BUFFERS(TPM2_EvictControl, &in.evictControlIn, &out.evictControlOut);
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_Auth].entity.handle = TPM_RH_OWNER;
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle] = srk;
+    in.evictControlIn.persistentHandle = TPM_20_SRK_HANDLE;
+    EXECUTE_TPM_CALL(FALSE, TPM2_EvictControl);
 
 Cleanup:
     if(srk.obj.handle != 0)
@@ -612,46 +687,31 @@ TpmUtilCreateEk(
     UINT32 result = TPM_RC_SUCCESS;
     union
     {
-        ReadPublic_In readPublicIn;
         CreatePrimary_In createPrimaryIn;
         EvictControl_In evictControlIn;
     } in;
     union
     {
-        ReadPublic_Out readPublicOut;
         CreatePrimary_Out createPrimaryOut;
         EvictControl_Out evictControlOut;
     } out;
     ANY_OBJECT ek = {0};
 
-    INITIALIZE_CALL_BUFFERS(TPM2_ReadPublic, &in.readPublicIn, &out.readPublicOut);
-    parms.objectTableIn[TPM2_ReadPublic_HdlIn_PublicKey].generic.handle = TPM_20_EK_HANDLE;
-    TRY_TPM_CALL(FALSE, TPM2_ReadPublic);
+    // Create the EK
+    INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &in.createPrimaryIn, &out.createPrimaryOut);
+    parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_ENDORSEMENT;
+    SetEkTemplate(&in.createPrimaryIn.inPublic);
+    EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
+    ek = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
 
-    if(result != TPM_RC_SUCCESS)
-    {
-        // Create the EK
-        INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &in.createPrimaryIn, &out.createPrimaryOut);
-        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_ENDORSEMENT;
-        SetEkTemplate(&in.createPrimaryIn.inPublic);
-        EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
-        ek = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
+    // ...and persist it in NV.
+    INITIALIZE_CALL_BUFFERS(TPM2_EvictControl, &in.evictControlIn, &out.evictControlOut);
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_Auth].entity.handle = TPM_RH_OWNER;
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle] = ek;
+    in.evictControlIn.persistentHandle = TPM_20_EK_HANDLE;
+    EXECUTE_TPM_CALL(FALSE, TPM2_EvictControl);
 
-        // ...and persist it.
-        INITIALIZE_CALL_BUFFERS(TPM2_EvictControl, &in.evictControlIn, &out.evictControlOut);
-        parms.objectTableIn[TPM2_EvictControl_HdlIn_Auth].entity.handle = TPM_RH_OWNER;
-        parms.objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle] = ek;
-        in.evictControlIn.persistentHandle = TPM_20_EK_HANDLE;
-        EXECUTE_TPM_CALL(FALSE, TPM2_EvictControl);
-
-        PrintTPM2BInitializer("EkName", (TPM2B*)&ek.obj.name);
-        persistedData.ekName = ek.obj.name;
-    }
-    else
-    {
-        PrintTPM2BInitializer("EkName", (TPM2B*)&out.readPublicOut.name);
-        persistedData.ekName = out.readPublicOut.name;
-    }
+    persistedData.ekName = ek.obj.name;
 
 Cleanup:
     if(ek.obj.handle != 0)
@@ -743,6 +803,12 @@ TpmUtilClearAndProvision(
     }
     printf("TpmUtilWriteBootPolicy() complete.\r\n");
 
+    HAL_FLASH_Unlock();
+    FLASH_Erase_Sector(FLASH_SECTOR_23, FLASH_VOLTAGE_RANGE_3);
+    persistedData.magic = RAZORCLAMPERSISTEDDATA;
+    persistedData.version = RAZORCLAMPERSISTEDVERSION;
+    persistedData.size = sizeof(RazorClamPersistentDataType);
+
     if((retVal = TpmUtilSignAppPayload(&appPayloadAuthority)) != TPM_RC_SUCCESS)
     {
         printf("TpmUtilSignAppPayload() failed with 0x%03x.\r\n", retVal);
@@ -750,6 +816,22 @@ TpmUtilClearAndProvision(
     }
     printf("TpmUtilSignAppPayload() complete.\r\n");
 
+    if((retVal = SetTpmAuthValues()) != TPM_RC_SUCCESS)
+    {
+        printf("SetTpmAuthValues() failed with 0x%03x.\r\n", retVal);
+        goto Cleanup;
+    }
+    printf("SetTpmAuthValues() complete.\r\n");
+
+    // Persist the data in flash
+    for(uint32_t n = 0; n < sizeof(persistedData); n++)
+    {
+        if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, ADDR_FLASH_SECTOR_23 + n, ((uint8_t*)&persistedData)[n]) != HAL_OK)
+        {
+            printf("Flash Write Error @ 0x%08x\r\n", ADDR_FLASH_SECTOR_23 + n);
+        }
+    }
+    HAL_FLASH_Lock();
 
 #ifdef NTZTPM
     // Best effort: Make the TPM clean house and persist everything that needs

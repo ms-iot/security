@@ -10,6 +10,16 @@ TpmUtilClearAndProvision(
     void
     );
 
+void
+TpmUtilStorePersistedData(
+    void
+    );
+
+void
+TpmUtilLoadPersistedData(
+    void
+    );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
