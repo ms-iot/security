@@ -10,12 +10,12 @@ TpmUtilClearAndProvision(
     void
     );
 
-void
+HAL_StatusTypeDef
 TpmUtilStorePersistedData(
     void
     );
 
-void
+HAL_StatusTypeDef
 TpmUtilLoadPersistedData(
     void
     );

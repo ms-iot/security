@@ -17,29 +17,44 @@
 
 //extern uint8_t fakeAppPayload[213];
 
-void
-TpmUtilStorePersistedData(void)
+HAL_StatusTypeDef
+TpmUtilStorePersistedData(
+    void
+    )
 {
-    printf("Persisting new configuration in MCU flash");
+    HAL_StatusTypeDef retVal = HAL_OK;
     HAL_FLASH_Unlock();
     FLASH_Erase_Sector(FLASH_SECTOR_23, FLASH_VOLTAGE_RANGE_3);
     for(uint32_t n = 0; n < sizeof(persistedData); n++)
     {
-        if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, ADDR_FLASH_SECTOR_23 + n, ((uint8_t*)&persistedData)[n]) != HAL_OK)
+        if((retVal = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, ADDR_FLASH_SECTOR_23 + n, ((uint8_t*)&persistedData)[n])) != HAL_OK)
         {
             printf("Flash Write Error @ 0x%08x\r\n", ADDR_FLASH_SECTOR_23 + n);
+            goto Cleanup;
         }
     }
+Cleanup:
     HAL_FLASH_Lock();
 }
 
-void
-TpmUtilLoadPersistedData(void)
+HAL_StatusTypeDef
+TpmUtilLoadPersistedData(
+    void
+    )
 {
-    printf("Retrieving configuration from MCU flash");
     memcpy((uint8_t*)&persistedData, (void*)ADDR_FLASH_SECTOR_23, sizeof(persistedData));
     fakeAppPayloadSize = *((uint32_t*)(ADDR_FLASH_SECTOR_23 + persistedData.size));
     fakeAppPayload = ((uint8_t*)(ADDR_FLASH_SECTOR_23 + persistedData.size + sizeof(uint32_t)));
+    if((persistedData.magic != RAZORCLAMPERSISTEDDATA) ||
+       (persistedData.version != RAZORCLAMPERSISTEDVERSION) ||
+       (persistedData.size < sizeof(persistedData)))
+    {
+        return HAL_ERROR;
+    }
+    else
+    {
+        return HAL_OK;
+    }
 }
 
 static UINT32
@@ -49,35 +64,64 @@ SetTpmAuthValues(void)
     UINT32 result = TPM_RC_SUCCESS;
     union
     {
+//        StartAuthSession_In startAuthSession;
         HierarchyChangeAuth_In hierarchyChangeAuth;
     } in;
     union
     {
+//        StartAuthSession_Out startAuthSession;
         HierarchyChangeAuth_Out hierarchyChangeAuth;
     } out;
+//    SESSION seededSession = {0};
 
+//    // Start EK salted session so we don't leak the new authValues
+//    INITIALIZE_CALL_BUFFERS(TPM2_StartAuthSession, &in.startAuthSession, &out.startAuthSession);
+//    parms.objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey] = volatileData.ekObject;  // Encrypt salt to EK
+//    parms.objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle = TPM_RH_NULL;
+//    in.startAuthSession.nonceCaller.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.startAuthSession.nonceCaller.t.buffer);
+//    in.startAuthSession.sessionType = TPM_SE_HMAC;
+//    in.startAuthSession.symmetric.algorithm = TPM_ALG_AES;
+//    in.startAuthSession.symmetric.keyBits.aes = 128;
+//    in.startAuthSession.symmetric.mode.aes = TPM_ALG_CFB;
+//    in.startAuthSession.authHash = TPM_ALG_SHA256;
+//    EXECUTE_TPM_CALL(FALSE, TPM2_StartAuthSession);
+//    seededSession = parms.objectTableOut[TPM2_StartAuthSession_HdlOut_SessionHandle].session;
+//    seededSession.attributes.decrypt = YES; // parameter decryption on for all calls
+
+    sessionTable[0] = volatileData.ekSeededSession;
+    sessionTable[0].attributes.decrypt = YES; // parameter decryption on for all calls
     INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
     parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle = TPM_RH_LOCKOUT;
     UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle, parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.name);
     parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle);
     in.hierarchyChangeAuth.newAuth.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.hierarchyChangeAuth.newAuth.t.buffer);
     EXECUTE_TPM_CALL(FALSE, TPM2_HierarchyChangeAuth);
+    sessionTable[0].attributes = volatileData.ekSeededSession.attributes;
+    volatileData.ekSeededSession = sessionTable[0];
     persistedData.lockoutAuth = in.hierarchyChangeAuth.newAuth;
 
+    sessionTable[0] = volatileData.ekSeededSession;
+    sessionTable[0].attributes.decrypt = YES; // parameter decryption on for all calls
     INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
     parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle = TPM_RH_ENDORSEMENT;
     UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle, parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.name);
     parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle);
     in.hierarchyChangeAuth.newAuth.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.hierarchyChangeAuth.newAuth.t.buffer);
     EXECUTE_TPM_CALL(FALSE, TPM2_HierarchyChangeAuth);
+    sessionTable[0].attributes = volatileData.ekSeededSession.attributes;
+    volatileData.ekSeededSession = sessionTable[0];
     persistedData.endorsementAuth = in.hierarchyChangeAuth.newAuth;
 
+    sessionTable[0] = volatileData.ekSeededSession;
+    sessionTable[0].attributes.decrypt = YES; // parameter decryption on for all calls
     INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
     parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle = TPM_RH_OWNER;
     UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle, parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.name);
     parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.handle);
     in.hierarchyChangeAuth.newAuth.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.hierarchyChangeAuth.newAuth.t.buffer);
     EXECUTE_TPM_CALL(FALSE, TPM2_HierarchyChangeAuth);
+    sessionTable[0].attributes = volatileData.ekSeededSession.attributes;
+    volatileData.ekSeededSession = sessionTable[0];
     persistedData.storageAuth = in.hierarchyChangeAuth.newAuth;
 
 Cleanup:
@@ -317,14 +361,15 @@ TpmUtilBuildSamplePolicy(
     // Authority Policy
     policyDB.policies[0].policy.t.info.isAuthorityPolicy = YES;
     policyDB.policies[0].policy.t.info.launchApp = YES;
-    policyDB.policies[0].policy.t.action.randomizePlatformAuth = YES;
+    policyDB.policies[0].policy.t.action.resetLockout = YES;
+    policyDB.policies[0].policy.t.action.dropLockoutAuth = YES;
+    policyDB.policies[0].policy.t.action.dropPlatformAuth = YES;
     policyDB.policies[0].policy.t.action.incrementCounter = 1;
     policyDB.policies[0].entity = appPayloadAuthority->obj.name;
 
     // Binary Policy
     policyDB.policies[1].policy.t.info.isBinaryPolicy = YES;
     policyDB.policies[1].policy.t.info.launchApp = YES;
-    policyDB.policies[1].policy.t.action.resetLockout = YES;
     policyDB.policies[1].policy.t.action.incrementCounter = 1;
     policyDB.policies[1].entity = appDigest;
 
@@ -711,6 +756,8 @@ TpmUtilCreateEk(
     in.evictControlIn.persistentHandle = TPM_20_EK_HANDLE;
     EXECUTE_TPM_CALL(FALSE, TPM2_EvictControl);
 
+    volatileData.ekObject = ek;
+    volatileData.ekObject.obj.handle = TPM_20_EK_HANDLE;
     persistedData.ekName = ek.obj.name;
 
 Cleanup:
@@ -803,11 +850,19 @@ TpmUtilClearAndProvision(
     }
     printf("TpmUtilWriteBootPolicy() complete.\r\n");
 
+    if((retVal = StartEkSeededSession()) != TPM_RC_SUCCESS)
+    {
+        printf("StartEkSeededSession() failed with 0x%03x.\r\n", retVal);
+        goto Cleanup;
+    }
+    printf("StartEkSeededSession() complete.\r\n");
+
     HAL_FLASH_Unlock();
     FLASH_Erase_Sector(FLASH_SECTOR_23, FLASH_VOLTAGE_RANGE_3);
     persistedData.magic = RAZORCLAMPERSISTEDDATA;
     persistedData.version = RAZORCLAMPERSISTEDVERSION;
     persistedData.size = sizeof(RazorClamPersistentDataType);
+    persistedData.compoundIdentity.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, persistedData.compoundIdentity.t.buffer);
 
     if((retVal = TpmUtilSignAppPayload(&appPayloadAuthority)) != TPM_RC_SUCCESS)
     {
@@ -823,6 +878,21 @@ TpmUtilClearAndProvision(
     }
     printf("SetTpmAuthValues() complete.\r\n");
 
+    if((retVal = MeasureEventConfidential(HR_PCR + 0, persistedData.compoundIdentity.t.size, persistedData.compoundIdentity.t.buffer)) != TPM_RC_SUCCESS)
+    {
+        printf("MeasureEventConfidential() failed with 0x%03x.\r\n", retVal);
+        goto Cleanup;
+    }
+
+    // Encrypt the authValues to be persisted
+    if(((retVal = ProtectPlatformData(persistedData.lockoutAuth.t.buffer, persistedData.lockoutAuth.t.size, NO)) != TPM_RC_SUCCESS) ||
+       ((retVal = ProtectPlatformData(persistedData.endorsementAuth.t.buffer, persistedData.endorsementAuth.t.size, NO)) != TPM_RC_SUCCESS) ||
+       ((retVal = ProtectPlatformData(persistedData.storageAuth.t.buffer, persistedData.storageAuth.t.size, NO)) != TPM_RC_SUCCESS))
+    {
+        printf("ProtectPlatformData() failed with 0x%03x.\r\n", retVal);
+        goto Cleanup;
+    }
+
     // Persist the data in flash
     for(uint32_t n = 0; n < sizeof(persistedData); n++)
     {
@@ -833,17 +903,6 @@ TpmUtilClearAndProvision(
     }
     HAL_FLASH_Lock();
 
-#ifdef NTZTPM
-    // Best effort: Make the TPM clean house and persist everything that needs
-    // to be persisted. There is an issue with the RSA engine on the NatZ TPM that
-    // could fail StartAuthSession with an EK encrypted seed when using the
-    // persisted EK and this work around seems to mitigate that issue on that TPM.
-    TpmShutdown(TPM_SU_CLEAR);
-    HAL_Delay(200);
-    TpmStartup(TPM_SU_CLEAR);
-    TpmSelfTest();
-#endif
-
 Cleanup:
     if(platformAuthority.obj.handle != 0)
     {
@@ -852,6 +911,11 @@ Cleanup:
     if(appPayloadAuthority.obj.handle != 0)
     {
         FlushContext(&appPayloadAuthority);
+    }
+    if(volatileData.ekSeededSession.handle != 0)
+    {
+        FlushContext((ANY_OBJECT*)&volatileData.ekSeededSession);
+        MemorySet(&volatileData.ekSeededSession, 0x00, sizeof(volatileData.ekSeededSession));
     }
     return retVal;
 }

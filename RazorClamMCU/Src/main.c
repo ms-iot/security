@@ -181,7 +181,11 @@ int main(void)
       }
   }
 
-  TpmUtilLoadPersistedData();
+  if(TpmUtilLoadPersistedData() != HAL_OK)
+  {
+      printf("Persisted data invalid.\r\n");
+      for(;;);
+  }
   if((retVal = RazorClam()) != TPM_RC_SUCCESS)
   {
       printf("RazorClam() failed.\r\n");

@@ -16,10 +16,10 @@
 #define ADDR_FLASH_SECTOR_23 ((uint32_t)0x081E0000)
 
 typedef struct {
-    unsigned int wipeLockoutAuth             : 1;
-    unsigned int wipeEndorsementAuth         : 1;
-    unsigned int wipeOwnerAuth               : 1;
-    unsigned int randomizePlatformAuth       : 1;
+    unsigned int dropPlatformAuth            : 1;
+    unsigned int dropLockoutAuth             : 1;
+    unsigned int dropEndorsementAuth         : 1;
+    unsigned int dropOwnerAuth               : 1;
     unsigned int incrementCounter            : 2;
     unsigned int resetLockout                : 1;
     unsigned int platformClearTpm            : 1;
@@ -63,6 +63,7 @@ typedef struct
     UINT64       magic;
     UINT32       version;
     UINT32       size;
+    TPM2B_DIGEST compoundIdentity;
     TPM2B_NAME   ekName;
     TPM2B_NAME   platformAuthorityName;
     TPM2B_AUTH   lockoutAuth;
@@ -87,6 +88,8 @@ typedef struct
     ANY_OBJECT        srkObject;
     ANY_OBJECT        hmacAikObject;
     TPMS_CONTEXT      hmacAikBlob;
+    ANY_OBJECT        aesDpkObject;
+    TPMS_CONTEXT      aesDpkBlob;
     SESSION           ekSeededSession;
     UINT32            resetCount;
     UINT32            restartCount;
@@ -108,5 +111,9 @@ void PrintTPM2BInitializer(const char* label, const TPM2B* data);
 UINT16 TPML_POLICY_ENTRIES_Marshal(TPML_POLICY_ENTRIES *source, BYTE **buffer, INT32 *size);
 TPM_RC TPML_POLICY_ENTRIES_Unmarshal(TPML_POLICY_ENTRIES *target, BYTE **buffer, INT32 *size);
 UINT32 FlushContext(ANY_OBJECT* tpmObject);
+UINT32 ProtectPlatformData(uint8_t* dataPtr, uint16_t dataSize, TPMI_YES_NO decrypt);
+UINT32 StartEkSeededSession(void);
+UINT32 MeasureEventConfidential(UINT32 pcrIndex, UINT32 dataSize, BYTE* dataPtr);
+
 
 #endif
