@@ -638,114 +638,6 @@ Cleanup:
     return result;
 }
 
-//UINT32
-//StartEkSeededSession(
-//        void
-//        )
-//{
-//    DEFINE_CALL_BUFFERS;
-//    UINT32 result = TPM_RC_SUCCESS;
-//    union
-//    {
-//        StartAuthSession_In startAuthSession;
-//    } in;
-//    union
-//    {
-//        StartAuthSession_Out startAuthSession;
-//    } out;
-//
-//    // Start EK salted session
-//    INITIALIZE_CALL_BUFFERS(TPM2_StartAuthSession, &in.startAuthSession, &out.startAuthSession);
-//    parms.objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey] = volatileData.ekObject;  // Encrypt salt to EK
-//    parms.objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle = TPM_RH_NULL;
-//    in.startAuthSession.nonceCaller.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.startAuthSession.nonceCaller.t.buffer);
-//    in.startAuthSession.sessionType = TPM_SE_HMAC;
-//    in.startAuthSession.symmetric.algorithm = TPM_ALG_AES;
-//    in.startAuthSession.symmetric.keyBits.aes = 128;
-//    in.startAuthSession.symmetric.mode.aes = TPM_ALG_CFB;
-//    in.startAuthSession.authHash = TPM_ALG_SHA256;
-//#ifndef NTZTPM
-//    EXECUTE_TPM_CALL(FALSE, TPM2_StartAuthSession);
-//#else
-//    TRY_TPM_CALL(FALSE, TPM2_StartAuthSession);
-//
-//    // The NatZ TPM has a quirk where the persisted EK fails to decrypt the seed
-//    // sometimes. A reliable workaround is to re-create the EK as transient object
-//    // and use that to protect the seed. Hopefully this will be fixed in future
-//    // versions of the NatZ TPm firmware
-//    if(result == (RC_FMT1 | TPM_RC_P | TPM_RC_2 | TPM_RC_VALUE)) // 0x00002c4
-//    {
-//        TPM2B_DATA salt = in.startAuthSession.salt; // We persist the encrypted salt to save time
-//        TPM2B_ENCRYPTED_SECRET encSalt = in.startAuthSession.encryptedSalt;
-//        CreatePrimary_In createPrimaryIn;
-//        CreatePrimary_Out createPrimaryOut;
-//        ANY_OBJECT ek = {0};
-//        SESSION hmacSession = {0};
-//
-//        // Start an HMAC session so we can protect the endorsementAuth from exposure
-//        // since we don't have the salted session up yet.
-//        INITIALIZE_CALL_BUFFERS(TPM2_StartAuthSession, &in.startAuthSession, &out.startAuthSession);
-//        parms.objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey].obj.handle = TPM_RH_NULL;
-//        parms.objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle = TPM_RH_NULL;
-//        in.startAuthSession.nonceCaller.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.startAuthSession.nonceCaller.t.buffer);
-//        in.startAuthSession.sessionType = TPM_SE_HMAC;
-//        in.startAuthSession.symmetric.algorithm = TPM_ALG_NULL;
-//        in.startAuthSession.authHash = TPM_ALG_SHA256;
-//        EXECUTE_TPM_CALL(FALSE, TPM2_StartAuthSession);
-//        hmacSession = parms.objectTableOut[TPM2_StartAuthSession_HdlOut_SessionHandle].session;
-//        hmacSession.attributes.continueSession = NO; // Schedule the session to terminate with the next call
-//
-//        // Re-create the EK as a new object with a transient handle. This key will
-//        // be absolutely identical to the persisted one
-//        sessionTable[0] = hmacSession;
-//        INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &createPrimaryIn, &createPrimaryOut);
-//        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_ENDORSEMENT;
-//        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.authValue = persistedData.endorsementAuth;
-//        UINT32_TO_BYTE_ARRAY(TPM_RH_ENDORSEMENT, parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.name.t.name);
-//        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.name.t.size = sizeof(TPM_RH_ENDORSEMENT);
-//        SetEkTemplate(&createPrimaryIn.inPublic);
-//        EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
-//        ek = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
-//
-//        // Make sure that the key that we just created matches the persisted EK
-//        if(Memory2BEqual((TPM2B*)&ek.obj.name, (TPM2B*)&volatileData.ekObject.obj.name) == FALSE)
-//        {
-//            FlushContext(&ek);
-//            result = TPM_RC_FAILURE;
-//            goto Cleanup;
-//        }
-//
-//        // Attempt to start the AuthSession with the transient EK now
-//        INITIALIZE_CALL_BUFFERS(TPM2_StartAuthSession, &in.startAuthSession, &out.startAuthSession);
-//        parms.objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey] = ek;  // Encrypt salt to the identical transient EK
-//        parms.objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle = TPM_RH_NULL;
-//        in.startAuthSession.nonceCaller.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.startAuthSession.nonceCaller.t.buffer);
-//        in.startAuthSession.sessionType = TPM_SE_HMAC;
-//        in.startAuthSession.symmetric.algorithm = TPM_ALG_AES;
-//        in.startAuthSession.symmetric.keyBits.aes = 128;
-//        in.startAuthSession.symmetric.mode.aes = TPM_ALG_CFB;
-//        in.startAuthSession.authHash = TPM_ALG_SHA256;
-//        in.startAuthSession.salt = salt; // We use the already encrypted salt from the first attempt
-//        in.startAuthSession.encryptedSalt = encSalt;
-//        TRY_TPM_CALL(FALSE, TPM2_StartAuthSession);
-//
-//        // Flush the transient EK again
-//        FlushContext(&ek);
-//
-//        if(result != TPM_RC_SUCCESS)
-//        {
-//            goto Cleanup;
-//        }
-//    }
-//#endif
-//
-//    // Copy the session out
-//    volatileData.ekSeededSession = parms.objectTableOut[TPM2_StartAuthSession_HdlOut_SessionHandle].session;
-//
-//Cleanup:
-//    return result;
-//}
-
 UINT32
 StartEkSeededSession(
         void
@@ -786,7 +678,7 @@ StartEkSeededSession(
         }
         else
         {
-            // Give the TPM some time to get the RSA engine ready
+            // The NTZ TPm has some issues here. Give the TPM some time to get the RSA engine ready
             HAL_Delay(250);
         }
     }
@@ -833,20 +725,11 @@ CreateAuthorities()
     }
     permanent = *((TPMA_PERMANENT*)&out.getCapability.capabilityData.data.tpmProperties.tpmProperty[0].value);
 
-// ToDo: Retrieve the authValues from EEPROM
-
     volatileData.lockoutObject.entity.handle = TPM_RH_LOCKOUT;
     UINT32_TO_BYTE_ARRAY(volatileData.lockoutObject.entity.handle, volatileData.lockoutObject.entity.name.t.name);
     volatileData.lockoutObject.entity.name.t.size = sizeof(volatileData.lockoutObject.entity.handle);
-//    buffer = volatileData.lockoutObject.entity.name.t.name;
-//    size = sizeof(volatileData.lockoutObject.entity.name.t.name);
-//    volatileData.lockoutObject.entity.name.t.size = TPM_HANDLE_Marshal(&volatileData.lockoutObject.entity.handle, &buffer, &size);
     if(permanent.lockoutAuthSet == CLEAR)
     {
-        // ToDo: Generate random Auth and persist in EEPROM
-        //UINT8 authSeed[] = "Lockout";
-        //persistedData.lockoutAuth.t.size = _cpri__HashBlock(TPM_ALG_SHA256, sizeof(authSeed), authSeed, sizeof(persistedData.lockoutAuth.t.buffer), persistedData.lockoutAuth.t.buffer);
-
         sessionTable[0] = volatileData.ekSeededSession;
         sessionTable[0].attributes.decrypt = SET;
         INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
@@ -865,15 +748,8 @@ CreateAuthorities()
     volatileData.endorsementObject.entity.handle = TPM_RH_ENDORSEMENT;
     UINT32_TO_BYTE_ARRAY(volatileData.endorsementObject.entity.handle, volatileData.endorsementObject.entity.name.t.name);
     volatileData.endorsementObject.entity.name.t.size = sizeof(volatileData.endorsementObject.entity.handle);
-//    buffer = volatileData.endorsementObject.entity.name.t.name;
-//    size = sizeof(volatileData.endorsementObject.entity.name.t.name);
-//    volatileData.endorsementObject.entity.name.t.size = TPM_HANDLE_Marshal(&volatileData.endorsementObject.entity.handle, &buffer, &size);
     if(permanent.endorsementAuthSet == CLEAR)
     {
-        // ToDo: Generate random Auth and persist in EEPROM
-        //UINT8 authSeed[] = "Endorsement";
-        //persistedData.endorsementAuth.t.size = _cpri__HashBlock(TPM_ALG_SHA256, sizeof(authSeed), authSeed, sizeof(persistedData.endorsementAuth.t.buffer), persistedData.endorsementAuth.t.buffer);
-
         sessionTable[0] = volatileData.ekSeededSession;
         sessionTable[0].attributes.decrypt = SET;
         INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
@@ -892,15 +768,8 @@ CreateAuthorities()
     volatileData.storageOwnerObject.entity.handle = TPM_RH_OWNER;
     UINT32_TO_BYTE_ARRAY(volatileData.storageOwnerObject.entity.handle, volatileData.storageOwnerObject.entity.name.t.name);
     volatileData.storageOwnerObject.entity.name.t.size = sizeof(volatileData.storageOwnerObject.entity.handle);
-//    buffer = volatileData.storageOwnerObject.entity.name.t.name;
-//    size = sizeof(volatileData.storageOwnerObject.entity.name.t.name);
-//    volatileData.storageOwnerObject.entity.name.t.size = TPM_HANDLE_Marshal(&volatileData.storageOwnerObject.entity.handle, &buffer, &size);
     if(permanent.ownerAuthSet == CLEAR)
     {
-        // ToDo: Generate random Auth and persist in EEPROM
-        //UINT8 authSeed[] = "Storage";
-        //persistedData.storageAuth.t.size = _cpri__HashBlock(TPM_ALG_SHA256, sizeof(authSeed), authSeed, sizeof(persistedData.storageAuth.t.buffer), persistedData.storageAuth.t.buffer);
-
         sessionTable[0] = volatileData.ekSeededSession;
         sessionTable[0].attributes.decrypt = SET;
         INITIALIZE_CALL_BUFFERS(TPM2_HierarchyChangeAuth, &in.hierarchyChangeAuth, &out.hierarchyChangeAuth);
@@ -920,9 +789,6 @@ CreateAuthorities()
     volatileData.platformObject.entity.handle = TPM_RH_PLATFORM;
     UINT32_TO_BYTE_ARRAY(volatileData.platformObject.entity.handle, volatileData.platformObject.entity.name.t.name);
     volatileData.platformObject.entity.name.t.size = sizeof(volatileData.platformObject.entity.handle);
-//    buffer = volatileData.platformObject.entity.name.t.name;
-//    size = sizeof(volatileData.platformObject.entity.name.t.name);
-//    volatileData.platformObject.entity.name.t.size = TPM_HANDLE_Marshal(&volatileData.platformObject.entity.handle, &buffer, &size);
 
 Cleanup:
     if(result != TPM_RC_SUCCESS)
@@ -1132,23 +998,22 @@ ProtectPlatformData(
     union
     {
         PolicyPCR_In policyPcr;
+        PolicyAuthValue_In policyAuthValue;
         StartAuthSession_In startAuthSession;
-        CreatePrimary_In createPrimary;
-        ContextSave_In contextSave;
-        ContextLoad_In contextLoad;
+        ReadPublic_In readPublic;
         EncryptDecrypt_In encryptDecrypt;
     } in;
     union
     {
         PolicyPCR_Out policyPcr;
+        PolicyAuthValue_Out policyAuthValue;
         StartAuthSession_Out startAuthSession;
-        CreatePrimary_Out createPrimary;
-        ContextSave_Out contextSave;
-        ContextLoad_Out contextLoad;
+        ReadPublic_In readPublic;
         EncryptDecrypt_Out encryptDecrypt;
     } out;
     SESSION policySession = {0};
     HASH_STATE hash = {0};
+    ANY_OBJECT aesKey = {0};
     TPM2B_DIGEST pcrDigest;
     TPML_PCR_SELECTION pcrs;
     TPML_DIGEST pcrValues = {0};
@@ -1177,75 +1042,48 @@ ProtectPlatformData(
     }
     CryptCompleteHash2B(&hash, (TPM2B*)&pcrDigest);
 
-    // Create the key if we don't have already
-    if(volatileData.aesDpkObject.obj.name.t.size == 0)
-    {
-        TPM2B_DIGEST policyDigest = {0};
-
-        // Calculate the PCR policy - Any change here will result in a different key
-        in.policyPcr.pcrs = pcrs;
-        in.policyPcr.pcrDigest = pcrDigest;
-        policyDigest.t.size = SHA256_DIGEST_SIZE;
-        TPM2_PolicyPCR_CalculateUpdate(TPM_ALG_SHA256, &policyDigest, &in.policyPcr);
-
-        // Create the PCR bound AES key
-        sessionTable[0] = volatileData.ekSeededSession;
-        INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &in.createPrimary, &out.createPrimary);
-        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_PLATFORM;
-        UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle, parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.name.t.name);
-        parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle);
-        in.createPrimary.inPublic.t.publicArea.type = TPM_ALG_SYMCIPHER;
-        in.createPrimary.inPublic.t.publicArea.nameAlg = TPM_ALG_SHA256;
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.fixedTPM = SET;
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.fixedParent = SET;
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.sensitiveDataOrigin = SET;
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.adminWithPolicy = SET;
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.noDA = SET;
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.decrypt = SET;
-#ifndef NTZTPM
-        in.createPrimary.inPublic.t.publicArea.objectAttributes.sign = SET;
-#endif
-        in.createPrimary.inPublic.t.publicArea.parameters.symDetail.algorithm = TPM_ALG_AES;
-        in.createPrimary.inPublic.t.publicArea.parameters.symDetail.keyBits.sym = 128;
-        in.createPrimary.inPublic.t.publicArea.parameters.symDetail.mode.sym = TPM_ALG_CFB;
-        in.createPrimary.inPublic.t.publicArea.authPolicy = policyDigest;
-        EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
-        volatileData.ekSeededSession = sessionTable[0];
-        volatileData.aesDpkObject = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
-        PrintTPM2B("PlatformDPKeyName", (TPM2B*)&volatileData.aesDpkObject.obj.name);
-
-        // Create a backup copy of that key
-        INITIALIZE_CALL_BUFFERS(TPM2_ContextSave, &in.contextSave, &out.contextSave);
-        parms.objectTableIn[TPM2_ContextSave_HdlIn_SaveHandle] = volatileData.aesDpkObject;
-        EXECUTE_TPM_CALL(FALSE, TPM2_ContextSave);
-        volatileData.aesDpkBlob = out.contextSave.context;
-    }
-    else
-    {
-        // We have already created that key just swap it back in
-        INITIALIZE_CALL_BUFFERS(TPM2_ContextLoad, &in.contextLoad, &out.contextLoad);
-        in.contextLoad.context = volatileData.aesDpkBlob;
-        EXECUTE_TPM_CALL(FALSE, TPM2_ContextLoad);
-        volatileData.aesDpkObject.obj.handle = parms.objectTableOut[TPM2_ContextLoad_HdlOut_LoadedHandle].obj.handle;
-    }
-
     // Start a policy session for the PCR binding
     INITIALIZE_CALL_BUFFERS(TPM2_StartAuthSession, &in.startAuthSession, &out.startAuthSession);
     parms.objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey].obj.handle = TPM_RH_NULL;
     parms.objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle = TPM_RH_NULL;
     in.startAuthSession.nonceCaller.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.startAuthSession.nonceCaller.t.buffer);
     in.startAuthSession.sessionType = TPM_SE_POLICY;
-    in.startAuthSession.symmetric.algorithm = TPM_ALG_NULL;
+    in.startAuthSession.symmetric.algorithm = TPM_ALG_AES;
+    in.startAuthSession.symmetric.keyBits.aes = 128;
+    in.startAuthSession.symmetric.mode.aes = TPM_ALG_CFB;
     in.startAuthSession.authHash = TPM_ALG_SHA256;
     EXECUTE_TPM_CALL(FALSE, TPM2_StartAuthSession);
     policySession = parms.objectTableOut[TPM2_StartAuthSession_HdlOut_SessionHandle].session;
 
     // Execute the PCR policy. If the PCRs don't match we fail here.
+    INITIALIZE_CALL_BUFFERS(TPM2_PolicyAuthValue, &in.policyAuthValue, &out.policyAuthValue);
+    parms.objectTableIn[TPM2_PolicyAuthValue_HdlIn_PolicySession].session = policySession;
+    EXECUTE_TPM_CALL(FALSE, TPM2_PolicyAuthValue);
+    policySession = parms.objectTableIn[TPM2_PolicyAuthValue_HdlIn_PolicySession].session;
+
     INITIALIZE_CALL_BUFFERS(TPM2_PolicyPCR, &in.policyPcr, &out.policyPcr);
     parms.objectTableIn[TPM2_PolicyPCR_HdlIn_PolicySession].session = policySession;
     in.policyPcr.pcrs = pcrs;
     in.policyPcr.pcrDigest = pcrDigest;
     EXECUTE_TPM_CALL(FALSE, TPM2_PolicyPCR);
+    policySession = parms.objectTableIn[TPM2_PolicyPCR_HdlIn_PolicySession].session;
+
+    // Read the aesDpk Name
+    INITIALIZE_CALL_BUFFERS(TPM2_ReadPublic, &in.readPublic, &out.readPublic);
+    parms.objectTableIn[TPM2_ReadPublic_HdlIn_PublicKey].generic.handle = TPM_PLATFORM_DPK_HANDLE;
+    EXECUTE_TPM_CALL(FALSE, TPM2_ReadPublic);
+    aesKey = parms.objectTableIn[0];
+
+    sessionTable[0] = volatileData.ekSeededSession;
+    sessionTable[0].attributes.audit = SET;
+    INITIALIZE_CALL_BUFFERS(TPM2_ReadPublic, &in.readPublic, &out.readPublic);
+    sessionCnt += 1; // Add the EK session for auditing
+    parms.objectTableIn[TPM2_ReadPublic_HdlIn_PublicKey] = aesKey;
+    EXECUTE_TPM_CALL(FALSE, TPM2_ReadPublic);
+    sessionTable[0].attributes = volatileData.ekSeededSession.attributes;
+    volatileData.ekSeededSession = sessionTable[0];
+    aesKey = parms.objectTableIn[0];
+    aesKey.obj.authValue = persistedData.compoundIdentity;
 
     // Perform the encryption or decryption
     sessionTable[0] = policySession;
@@ -1254,30 +1092,19 @@ ProtectPlatformData(
     // DWooten said he will add a new command to teh spec that does support that
     if(decrypt == YES) // protect the clear text on the wire
     {
-        sessionTable[1] = volatileData.ekSeededSession;
-        sessionTable[1].attributes.encrypt = YES;
+        sessionTable[0].attributes.encrypt = YES;
     }
     INITIALIZE_CALL_BUFFERS(TPM2_EncryptDecrypt, &in.encryptDecrypt, &out.encryptDecrypt);
-    if(decrypt == YES) // protect the clear text on the wire at least for decrypt
-    {
-        sessionCnt += 1; // Add the EK session for parameter encryption
-    }
-    parms.objectTableIn[TPM2_EncryptDecrypt_HdlIn_KeyHandle] = volatileData.aesDpkObject;
+    parms.objectTableIn[TPM2_EncryptDecrypt_HdlIn_KeyHandle] = aesKey;
     in.encryptDecrypt.inData.t.size = dataSize;
     MemoryCopy(in.encryptDecrypt.inData.t.buffer, dataPtr, in.encryptDecrypt.inData.t.size, sizeof(in.encryptDecrypt.inData.t.buffer));
     in.encryptDecrypt.decrypt = decrypt;
     in.encryptDecrypt.mode = TPM_ALG_NULL;
     in.encryptDecrypt.ivIn.t.size = 16; // IV is zero bytes
     EXECUTE_TPM_CALL(FALSE, TPM2_EncryptDecrypt);
-    if(decrypt == YES) // protect the clear text on the wire
-    {
-        sessionTable[1].attributes = volatileData.ekSeededSession.attributes;
-        volatileData.ekSeededSession = sessionTable[1];
-    }
     MemoryCopy(dataPtr, out.encryptDecrypt.outData.t.buffer, out.encryptDecrypt.outData.t.size, dataSize);
 
 Cleanup:
-    FlushContext(&volatileData.aesDpkObject);
     if(result != TPM_RC_SUCCESS)
     {
         // Copy the EKSeeded session back out in case of an error

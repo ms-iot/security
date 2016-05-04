@@ -15,7 +15,123 @@
 
 #define ADDR_FLASH_SECTOR_23 ((uint32_t)0x081E0000)
 
-//extern uint8_t fakeAppPayload[213];
+UINT32
+CreatePlatformDataProtectionKey(
+    void
+    )
+{
+    DEFINE_CALL_BUFFERS;
+    UINT32 result = TPM_RC_SUCCESS;
+    union
+    {
+        PolicyPCR_In policyPcr;
+        PolicyAuthValue_In policyAuthValue;
+        StartAuthSession_In startAuthSession;
+        CreatePrimary_In createPrimary;
+        EvictControl_In evictControl;
+    } in;
+    union
+    {
+        CreatePrimary_Out createPrimary;
+        EvictControl_Out evictControl;
+    } out;
+    SESSION policySession = {0};
+    TPM2B_DIGEST policyDigest = {0};
+    HASH_STATE hash = {0};
+    TPM2B_DIGEST pcrDigest = {0};
+    TPML_PCR_SELECTION pcrs = {0};
+    TPML_DIGEST pcrValues = {0};
+    ANY_OBJECT aesDpkObject = {0};
+
+    // Best effort free the NV index if there is already a key
+    INITIALIZE_CALL_BUFFERS(TPM2_EvictControl, &in.evictControl, &out.evictControl);
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_Auth].entity.handle = TPM_RH_PLATFORM;
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle].obj.handle = TPM_PLATFORM_DPK_HANDLE;
+    in.evictControl.persistentHandle = TPM_PLATFORM_DPK_HANDLE;
+    TRY_TPM_CALL(FALSE, TPM2_EvictControl);
+
+    // Calculate the expected PCR table for the policy
+    pcrs.count = 1;
+    pcrs.pcrSelections[0].hash = TPM_ALG_SHA256;
+    pcrs.pcrSelections[0].sizeofSelect = 3;
+    pcrs.pcrSelections[0].pcrSelect[0] = 0xFF;
+    pcrs.pcrSelections[0].pcrSelect[1] = 0x00;
+    pcrs.pcrSelections[0].pcrSelect[2] = 0x00;
+    pcrValues.count = 8;
+    for(UINT32 n = 0; n < pcrValues.count; n++)
+    {
+        pcrValues.digests[n].t.size = SHA256_DIGEST_SIZE;
+    }
+    pcrValues.digests[0].t.size = CryptStartHash(TPM_ALG_SHA256, &hash);
+    CryptUpdateDigest2B(&hash, (TPM2B*)&pcrValues.digests[0]);
+    CryptHashBlock(TPM_ALG_SHA256, persistedData.compoundIdentity.t.size, persistedData.compoundIdentity.t.buffer, pcrValues.digests[0].t.size, pcrValues.digests[0].t.buffer);
+    CryptUpdateDigest2B(&hash, (TPM2B*)&pcrValues.digests[0]);
+    CryptCompleteHash2B(&hash, (TPM2B*)&pcrValues.digests[0]);
+    pcrDigest.t.size = CryptStartHash(TPM_ALG_SHA256, &hash);
+    for(UINT32 n = 0; n < pcrValues.count; n++)
+    {
+        CryptUpdateDigest(&hash, pcrValues.digests[n].t.size, pcrValues.digests[n].t.buffer);
+    }
+    CryptCompleteHash2B(&hash, (TPM2B*)&pcrDigest);
+
+    // Calculate the PCR policy - Any change here will result in a different key
+    // policydigest = PolicyAuthValue() || PolicyPCR(PCR[0..7])
+    policyDigest.t.size = SHA256_DIGEST_SIZE;
+    TPM2_PolicyAuthValue_CalculateUpdate(TPM_ALG_SHA256, &policyDigest, &in.policyAuthValue);
+    in.policyPcr.pcrs = pcrs;
+    in.policyPcr.pcrDigest = pcrDigest;
+    TPM2_PolicyPCR_CalculateUpdate(TPM_ALG_SHA256, &policyDigest, &in.policyPcr);
+
+    // Create the PCR bound AES key
+    sessionTable[0] = volatileData.ekSeededSession;
+    sessionTable[0].attributes.decrypt = YES;
+    INITIALIZE_CALL_BUFFERS(TPM2_CreatePrimary, &in.createPrimary, &out.createPrimary);
+    parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle = TPM_RH_PLATFORM;
+    UINT32_TO_BYTE_ARRAY(parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle, parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.name.t.name);
+    parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.name.t.size = sizeof(parms.objectTableIn[TPM2_CreatePrimary_HdlIn_PrimaryHandle].entity.handle);
+    in.createPrimary.inSensitive.t.sensitive.data.t.size = CryptGenerateRandom(16, in.createPrimary.inSensitive.t.sensitive.data.t.buffer);
+    in.createPrimary.inSensitive.t.sensitive.userAuth = persistedData.compoundIdentity;
+    in.createPrimary.inPublic.t.publicArea.type = TPM_ALG_SYMCIPHER;
+    in.createPrimary.inPublic.t.publicArea.nameAlg = TPM_ALG_SHA256;
+    in.createPrimary.inPublic.t.publicArea.objectAttributes.fixedTPM = SET;
+    in.createPrimary.inPublic.t.publicArea.objectAttributes.fixedParent = SET;
+    in.createPrimary.inPublic.t.publicArea.objectAttributes.adminWithPolicy = SET;
+    in.createPrimary.inPublic.t.publicArea.objectAttributes.noDA = SET;
+    in.createPrimary.inPublic.t.publicArea.objectAttributes.decrypt = SET;
+#ifndef NTZTPM
+    in.createPrimary.inPublic.t.publicArea.objectAttributes.sign = SET;
+#endif
+    in.createPrimary.inPublic.t.publicArea.parameters.symDetail.algorithm = TPM_ALG_AES;
+    in.createPrimary.inPublic.t.publicArea.parameters.symDetail.keyBits.sym = 128;
+    in.createPrimary.inPublic.t.publicArea.parameters.symDetail.mode.sym = TPM_ALG_CFB;
+    in.createPrimary.inPublic.t.publicArea.authPolicy = policyDigest;
+    EXECUTE_TPM_CALL(FALSE, TPM2_CreatePrimary);
+    sessionTable[0].attributes = volatileData.ekSeededSession.attributes;
+    volatileData.ekSeededSession = sessionTable[0];
+    aesDpkObject = parms.objectTableOut[TPM2_CreatePrimary_HdlOut_ObjectHandle];
+    PrintTPM2B("PlatformDPKeyName", (TPM2B*)&aesDpkObject.obj.name);
+
+    // Persist the key
+    sessionTable[0] = volatileData.ekSeededSession;
+    INITIALIZE_CALL_BUFFERS(TPM2_EvictControl, &in.evictControl, &out.evictControl);
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_Auth].entity.handle = TPM_RH_PLATFORM;
+    parms.objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle] = aesDpkObject;
+    in.evictControl.persistentHandle = TPM_PLATFORM_DPK_HANDLE;
+    EXECUTE_TPM_CALL(FALSE, TPM2_EvictControl);
+    volatileData.ekSeededSession = sessionTable[0];
+
+Cleanup:
+    if(aesDpkObject.obj.handle != 0)
+    {
+        FlushContext(&aesDpkObject);
+    }
+    if(result != TPM_RC_SUCCESS)
+    {
+        // Copy the EKSeeded session back out in case of an error
+        volatileData.ekSeededSession = sessionTable[0];
+    }
+    return result;
+}
 
 HAL_StatusTypeDef
 TpmUtilStorePersistedData(
@@ -58,35 +174,20 @@ TpmUtilLoadPersistedData(
 }
 
 static UINT32
-SetTpmAuthValues(void)
+SetTpmAuthValues(
+    void
+    )
 {
     DEFINE_CALL_BUFFERS;
     UINT32 result = TPM_RC_SUCCESS;
     union
     {
-//        StartAuthSession_In startAuthSession;
         HierarchyChangeAuth_In hierarchyChangeAuth;
     } in;
     union
     {
-//        StartAuthSession_Out startAuthSession;
         HierarchyChangeAuth_Out hierarchyChangeAuth;
     } out;
-//    SESSION seededSession = {0};
-
-//    // Start EK salted session so we don't leak the new authValues
-//    INITIALIZE_CALL_BUFFERS(TPM2_StartAuthSession, &in.startAuthSession, &out.startAuthSession);
-//    parms.objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey] = volatileData.ekObject;  // Encrypt salt to EK
-//    parms.objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle = TPM_RH_NULL;
-//    in.startAuthSession.nonceCaller.t.size = CryptGenerateRandom(SHA256_DIGEST_SIZE, in.startAuthSession.nonceCaller.t.buffer);
-//    in.startAuthSession.sessionType = TPM_SE_HMAC;
-//    in.startAuthSession.symmetric.algorithm = TPM_ALG_AES;
-//    in.startAuthSession.symmetric.keyBits.aes = 128;
-//    in.startAuthSession.symmetric.mode.aes = TPM_ALG_CFB;
-//    in.startAuthSession.authHash = TPM_ALG_SHA256;
-//    EXECUTE_TPM_CALL(FALSE, TPM2_StartAuthSession);
-//    seededSession = parms.objectTableOut[TPM2_StartAuthSession_HdlOut_SessionHandle].session;
-//    seededSession.attributes.decrypt = YES; // parameter decryption on for all calls
 
     sessionTable[0] = volatileData.ekSeededSession;
     sessionTable[0].attributes.decrypt = YES; // parameter decryption on for all calls
@@ -883,6 +984,13 @@ TpmUtilClearAndProvision(
         printf("MeasureEventConfidential() failed with 0x%03x.\r\n", retVal);
         goto Cleanup;
     }
+
+    if((retVal = CreatePlatformDataProtectionKey()) != TPM_RC_SUCCESS)
+    {
+        printf("CreatePlatformDataProtectionKey() failed with 0x%03x.\r\n", retVal);
+        goto Cleanup;
+    }
+    printf("CreatePlatformDataProtectionKey() complete.\r\n");
 
     // Encrypt the authValues to be persisted
     if(((retVal = ProtectPlatformData(persistedData.lockoutAuth.t.buffer, persistedData.lockoutAuth.t.size, NO)) != TPM_RC_SUCCESS) ||

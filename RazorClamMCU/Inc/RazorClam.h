@@ -4,14 +4,12 @@
 #define TPM_SECUREBOOT_NV_RANGE (0x4241) // "AB" AuthenticatedBoot (an arbitrary spot in NV)
 #define TPM_PLATFORM_LOCKDOWN_POLICY_NV_INDEX (0x01000000 | (TPM_SECUREBOOT_NV_RANGE << 8))
 #define TPM_PLATFORM_COUNTERS_NV_INDEX (0x01000010 | (TPM_SECUREBOOT_NV_RANGE << 8))
+#define PLATFORM_POLICY_MAX_ENTRIES 10
+#define TPM_PLATFORM_DPK_HANDLE 0x81800001
 
 #define RAZORCLAMPERSISTEDDATA (0x4144504d4c435a52) //'ADPMLCZR' RaZorCLaM Persisted Data Area
 #define RAZORCLAMPERSISTEDVERSION (0x00000001)
 #define TPM_APP_AUTHORITY_SECTION (0x48545541324D5054) //'TPM2AUTH'
-
-#define TPM_SECUREBOOT_NV_RANGE (0x4241) // "AB" AuthenticatedBoot (an arbitrary spot in NV)
-#define TPM_PLATFORM_LOCKDOWN_POLICY_NV_INDEX (0x01000000 | (TPM_SECUREBOOT_NV_RANGE << 8))
-#define PLATFORM_POLICY_MAX_ENTRIES                   10
 
 #define ADDR_FLASH_SECTOR_23 ((uint32_t)0x081E0000)
 
@@ -88,8 +86,6 @@ typedef struct
     ANY_OBJECT        srkObject;
     ANY_OBJECT        hmacAikObject;
     TPMS_CONTEXT      hmacAikBlob;
-    ANY_OBJECT        aesDpkObject;
-    TPMS_CONTEXT      aesDpkBlob;
     SESSION           ekSeededSession;
     UINT32            resetCount;
     UINT32            restartCount;
