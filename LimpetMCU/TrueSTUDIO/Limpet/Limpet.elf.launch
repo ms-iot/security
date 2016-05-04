@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="com.atollic.hardwaredebug.launch.launchConfigurationType">
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.cpu_core" value="Cortex-M"/>
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.device" value="STM32F429ZI"/>
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.endian" value="little"/>
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.init_speed" value="2000"/>
+<booleanAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_check_serial_number" value="false"/>
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_script_path" value=""/>
+<booleanAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_script_used" value="false"/>
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_trace_port_cfg_path" value="C:\Program Files (x86)\Atollic\TrueSTUDIO for ARM 5.4.2\ide\plugins\com.atollic.truestudio.tsp.stm32_1.0.0.201603210106\tsp\etm\stm32f4xx.init"/>
+<intAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_tracebuffer_size" value="16"/>
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_txt_serial_number" value=""/>
+<booleanAttribute key="com.atollic.hardwaredebug.jlink_common.scan_chain_auto" value="true"/>
+<intAttribute key="com.atollic.hardwaredebug.jlink_common.scan_chain_irpre" value="0"/>
+<intAttribute key="com.atollic.hardwaredebug.jlink_common.scan_chain_pos" value="0"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.analyzeCommands" value="# Default GDB command file (FLASH) for SEGGER J-LINK and STMicroelectronics STM32F429ZI microcontroller.&#13;&#10;&#13;&#10;# Set character encoding&#13;&#10;set host-charset CP1252&#13;&#10;set target-charset CP1252&#13;&#10;&#13;&#10;# Set JTAG speed to 30 kHz&#13;&#10;monitor speed 30&#13;&#10;&#13;&#10;# Set GDBServer to little endian&#13;&#10;monitor endian little&#13;&#10;&#13;&#10;# Reset the chip to get to a known state.&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set auto JTAG speed&#13;&#10;monitor speed auto&#13;&#10;&#13;&#10;# Setup GDB FOR FASTER DOWNLOADS&#13;&#10;set remote memory-write-packet-size 1024&#13;&#10;set remote memory-write-packet-size fixed&#13;&#10;&#13;&#10;# Enable flash download&#13;&#10;monitor flash download = 1&#13;&#10;&#13;&#10;# Flash device&#13;&#10;monitor flash device = STM32F429ZI&#13;&#10;&#13;&#10;# Load the program executable&#13;&#10;load&#9;&#9;&#13;&#10;&#13;&#10;# Reset the chip to get to a known state. Remove &quot;monitor reset&quot; command &#13;&#10;#  if the code is not located at default address and does not run by reset. &#13;&#10;monitor reset&#13;&#10;# Start the executable&#13;&#10;continue"/>
+<booleanAttribute key="com.atollic.hardwaredebug.launch.enable_live_expr" value="true"/>
+<intAttribute key="com.atollic.hardwaredebug.launch.formatVersion" value="2"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.hwinitCommands" value="# Initialize your hardware here&#13;&#10;"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.ipAddress" value="localhost"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.jtagDevice" value="SEGGER J-LINK"/>
+<intAttribute key="com.atollic.hardwaredebug.launch.portNumber" value="2331"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.remoteCommand" value="target extended-remote"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.runCommands" value="# Default GDB command file (FLASH) for SEGGER J-LINK and STMicroelectronics STM32F429ZI microcontroller.&#13;&#10;&#13;&#10;# Set character encoding&#13;&#10;set host-charset CP1252&#13;&#10;set target-charset CP1252&#13;&#10;&#13;&#10;# Set JTAG speed to 30 kHz&#13;&#10;monitor speed 30&#13;&#10;&#13;&#10;# Set GDBServer to little endian&#13;&#10;monitor endian little&#13;&#10;&#13;&#10;# Reset the chip to get to a known state.&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set auto JTAG speed&#13;&#10;monitor speed auto&#13;&#10;&#13;&#10;# Setup GDB FOR FASTER DOWNLOADS&#13;&#10;set remote memory-write-packet-size 1024&#13;&#10;set remote memory-write-packet-size fixed&#13;&#10;&#13;&#10;# Enable flash download&#13;&#10;monitor flash download = 1&#13;&#10;&#13;&#10;# Flash device&#13;&#10;monitor flash device = STM32F429ZI&#13;&#10;&#13;&#10;# Load the program executable&#13;&#10;load&#9;&#9;&#13;&#10;&#13;&#10;# Reset the chip to get to a known state. Remove &quot;monitor reset&quot; command &#13;&#10;#  if the code is not located at default address and does not run by reset. &#13;&#10;monitor reset&#13;&#10;# Set a breakpoint at main().&#13;&#10;tbreak main&#13;&#10;&#13;&#10;# Run to the breakpoint.&#13;&#10;continue"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.serverParam" value="-port 2331 -s -CPU Cortex-M -device STM32F429ZI -endian little -speed 2000 -if swd"/>
+<booleanAttribute key="com.atollic.hardwaredebug.launch.startServer" value="false"/>
+<booleanAttribute key="com.atollic.hardwaredebug.launch.swd_mode" value="true"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.swv_port" value="2332"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.swv_trace_div" value="8"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.swv_trace_hclk" value="8000000"/>
+<intAttribute key="com.atollic.hardwaredebug.launch.trace_system" value="0"/>
+<booleanAttribute key="com.atollic.hardwaredebug.launch.useRemoteTarget" value="true"/>
+<stringAttribute key="com.atollic.hardwaredebug.launch.verifyCommands" value="# Default GDB command file (FLASH) for SEGGER J-LINK and STMicroelectronics STM32F429ZI microcontroller.&#13;&#10;&#13;&#10;# Set character encoding&#13;&#10;set host-charset CP1252&#13;&#10;set target-charset CP1252&#13;&#10;&#13;&#10;# Set JTAG speed to 30 kHz&#13;&#10;monitor speed 30&#13;&#10;&#13;&#10;# Set GDBServer to little endian&#13;&#10;monitor endian little&#13;&#10;&#13;&#10;# Reset the chip to get to a known state.&#13;&#10;monitor reset&#13;&#10;&#13;&#10;# Set auto JTAG speed&#13;&#10;monitor speed auto&#13;&#10;&#13;&#10;# Setup GDB FOR FASTER DOWNLOADS&#13;&#10;set remote memory-write-packet-size 1024&#13;&#10;set remote memory-write-packet-size fixed&#13;&#10;&#13;&#10;# Enable flash download&#13;&#10;monitor flash download = 1&#13;&#10;&#13;&#10;# Flash device&#13;&#10;monitor flash device = STM32F429ZI&#13;&#10;&#13;&#10;# Load the program executable&#13;&#10;load&#9;&#9;&#13;&#10;&#13;&#10;# Reset the chip to get to a known state. Remove &quot;monitor reset&quot; command &#13;&#10;#  if the code is not located at default address and does not run by reset. &#13;&#10;monitor reset&#13;&#10;# The executable starts automatically"/>
+<booleanAttribute key="com.atollic.hardwaredebug.stlink.enable_logging" value="false"/>
+<stringAttribute key="com.atollic.hardwaredebug.stlink.log_file" value="C:/Users/StefanTh/Source/Atollic/Limpet//TrueSTUDIO/Limpet\Debug\st-link_gdbserver_log.txt"/>
+<booleanAttribute key="com.atollic.hardwaredebug.stlink.verify_flash" value="false"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.DEBUG_NAME" value="${TOOLCHAIN_PATH}/arm-atollic-eabi-gdb"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.commandFactory" value="Standard (Windows)"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.protocol" value="mi"/>
+<booleanAttribute key="org.eclipse.cdt.debug.mi.core.verboseMode" value="false"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="${TOOLCHAIN_PATH}/arm-atollic-eabi-gdb"/>
+<intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/Limpet.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="Limpet"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/Limpet"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;&gt;&#13;&#10;&lt;gdbmemoryBlockExpression address=&quot;536984800&quot; label=&quot;0x2001bce0&quot;/&gt;&#13;&#10;&lt;/memoryBlockExpressionList&gt;&#13;&#10;"/>
+<stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
+</launchConfiguration>
