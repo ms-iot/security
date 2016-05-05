@@ -140,6 +140,7 @@
 
 /* USER CODE BEGIN 1 */
 #define LWIP_RAND() rand()
+#define LWIP_TIMEVAL_PRIVATE 0
 /* USER CODE END 1 */
 
 #ifdef __cplusplus
