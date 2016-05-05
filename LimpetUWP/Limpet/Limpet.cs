@@ -307,7 +307,7 @@ namespace Limpet
             string deviceId = GetDeviceId();
             string hostName = GetHostName();
             long expirationTime = (DateTime.Now.ToUniversalTime().ToFileTime() / WINDOWS_TICKS_PER_SEC) - EPOCH_DIFFERNECE;
-            string connectionString = "";
+            string sasToken = "";
             if ((hostName.Length > 0) && (deviceId.Length > 0))
             {
                 // Encode the message to sign with the TPM
@@ -323,8 +323,21 @@ namespace Limpet
                 {
                     // Encode the output and assemble the connection string
                     string hmacString = AzureUrlEncode(System.Convert.ToBase64String(hmac));
-                    connectionString = "HostName=" + hostName + ";DeviceId=" + deviceId + ";SharedAccessSignature=SharedAccessSignature sr=" + hostName + "/devices/" + deviceId + "&sig=" + hmacString + "&se=" + expirationTime;
+                    sasToken = "SharedAccessSignature sr=" + hostName + "/devices/" + deviceId + "&sig=" + hmacString + "&se=" + expirationTime;
                 }
+            }
+            return sasToken;
+        }
+
+        public string GetConnectionString(uint validity = 3600)
+        {
+            string deviceId = GetDeviceId();
+            string hostName = GetHostName();
+            string sasToken = GetSASToken(validity);
+            string connectionString = "";
+            if ((hostName.Length > 0) && (deviceId.Length > 0) && (sasToken.Length > 0))
+            {
+                connectionString = "HostName=" + hostName + ";DeviceId=" + deviceId + ";SharedAccessSignature=" + sasToken;
             }
             return connectionString;
         }
