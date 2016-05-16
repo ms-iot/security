@@ -484,6 +484,60 @@ Cleanup:
 }
 
 static UINT32
+FindBinaryPolicy(
+    TPM2B_MAX_NV_BUFFER* rawPolicy,
+    UINT32 codeMeasurement,
+    TPMU_POLICY_FLAGS* policy
+    )
+{
+    UINT32 result = TPM_RC_SUCCESS;
+    // Look up the boot policy. It could be for any of the TPM generated code digests
+    for(UINT32 n = 0; n < volatileData.measurementLog[codeMeasurement].measurement.count; n++)
+    {
+        TPM2B_NAME binaryName = {0};
+        switch(volatileData.measurementLog[codeMeasurement].measurement.digests[n].hashAlg)
+        {
+        case TPM_ALG_SHA1:
+            binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha1) + sizeof(TPM_ALG_SHA1);
+            UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA1, binaryName.t.name);
+            MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA1)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha1, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha1), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA1));
+            break;
+        case TPM_ALG_SHA256:
+            binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha256) + sizeof(TPM_ALG_SHA256);
+            UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA256, binaryName.t.name);
+            MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA256)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha256, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha256), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA256));
+            break;
+        case TPM_ALG_SHA384:
+            binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha384) + sizeof(TPM_ALG_SHA384);
+            UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA384, binaryName.t.name);
+            MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA384)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha384, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha384), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA384));
+            break;
+        case TPM_ALG_SHA512:
+            binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha512) + sizeof(TPM_ALG_SHA512);
+            UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA512, binaryName.t.name);
+            MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA512)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha512, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha512), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA512));
+            break;
+        case TPM_ALG_SM3_256:
+            binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sm3_256) + sizeof(TPM_ALG_SM3_256);
+            UINT16_TO_BYTE_ARRAY(TPM_ALG_SM3_256, binaryName.t.name);
+            MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SM3_256)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sm3_256, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sm3_256), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SM3_256));
+            break;
+        }
+        if((result = FilterBootPolicy(rawPolicy, &binaryName, policy)) != TPM_RC_SUCCESS)
+        {
+            return result;
+        }
+        if(policy->t.info.isBinaryPolicy == YES)
+        {
+            // We found a policy for the measured payloadApp digest
+            return TPM_RC_SUCCESS;
+        }
+    }
+    policy->b = 0;
+    return TPM_RC_FAILURE;
+}
+
+static UINT32
 ObtainRawPolicy(
     TPM2B_MAX_NV_BUFFER* rawPolicy
     )
@@ -1727,8 +1781,8 @@ RazorClam(
     if((appPayloadSigntureBlock = FindSignatureBlock(fakeAppPayload, fakeAppPayloadSize)) > 0)
     {
         TPM2B_NAME payloadAuthorityName = {0};
+        UINT32 codeMeasurement = volatileData.measurementIndex;
 
-//        PrintBuffer("APP", fakeAppPayload, appPayloadSigntureBlock);
         printf("Found trailing signature block in AppPayload.\r\n");
 
         // Extend the appPayload and exclude the signature block
@@ -1755,10 +1809,14 @@ RazorClam(
         printf("Measurement: PayloadAuthority (%u bytes) in PCR[3].(%ums)\r\n", payloadAuthorityName.t.size, (unsigned int)(HAL_GetTick() - startT));
 
         // Look up the boot policy
-        if((rawPolicy.t.size != 0) &&
-           ((retVal = FilterBootPolicy(&rawPolicy, &payloadAuthorityName, &bootPolicy)) != TPM_RC_SUCCESS))
+        if(rawPolicy.t.size != 0)
         {
-            TpmFail("FilterBootPolicy", __LINE__, retVal);
+            if((rawPolicy.t.size != 0) &&
+               ((retVal = FindBinaryPolicy(&rawPolicy, codeMeasurement, &bootPolicy)) != TPM_RC_SUCCESS) &&
+               ((retVal = FilterBootPolicy(&rawPolicy, &payloadAuthorityName, &bootPolicy)) != TPM_RC_SUCCESS))
+            {
+                TpmFail("FilterBootPolicy", __LINE__, retVal);
+            }
         }
     }
     else
@@ -1786,49 +1844,13 @@ RazorClam(
         }
         printf("Measurement: No PayloadAuthority TPM_RH_NULL (%d bytes) in PCR[3].(%ums)\r\n", sizeof(noAuthority), (unsigned int)(HAL_GetTick() - startT));
 
+        // Look up the boot policy
         if(rawPolicy.t.size != 0)
         {
-            // Look up the boot policy. It could be for any of the TPM generated code digests
-            for(UINT32 n = 0; n < volatileData.measurementLog[codeMeasurement].measurement.count; n++)
+            if((rawPolicy.t.size != 0) &&
+               ((retVal = FindBinaryPolicy(&rawPolicy, codeMeasurement, &bootPolicy)) != TPM_RC_SUCCESS))
             {
-                TPM2B_NAME binaryName = {0};
-                switch(volatileData.measurementLog[codeMeasurement].measurement.digests[n].hashAlg)
-                {
-                case TPM_ALG_SHA1:
-                    binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha1) + sizeof(TPM_ALG_SHA1);
-                    UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA1, binaryName.t.name);
-                    MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA1)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha1, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha1), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA1));
-                    break;
-                case TPM_ALG_SHA256:
-                    binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha256) + sizeof(TPM_ALG_SHA256);
-                    UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA256, binaryName.t.name);
-                    MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA256)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha256, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha256), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA256));
-                    break;
-                case TPM_ALG_SHA384:
-                    binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha384) + sizeof(TPM_ALG_SHA384);
-                    UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA384, binaryName.t.name);
-                    MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA384)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha384, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha384), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA384));
-                    break;
-                case TPM_ALG_SHA512:
-                    binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha512) + sizeof(TPM_ALG_SHA512);
-                    UINT16_TO_BYTE_ARRAY(TPM_ALG_SHA512, binaryName.t.name);
-                    MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SHA512)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha512, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sha512), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SHA512));
-                    break;
-                case TPM_ALG_SM3_256:
-                    binaryName.t.size = sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sm3_256) + sizeof(TPM_ALG_SM3_256);
-                    UINT16_TO_BYTE_ARRAY(TPM_ALG_SM3_256, binaryName.t.name);
-                    MemoryCopy(&binaryName.t.name[sizeof(TPM_ALG_SM3_256)], volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sm3_256, sizeof(volatileData.measurementLog[codeMeasurement].measurement.digests[n].digest.sm3_256), sizeof(binaryName.t.name) - sizeof(TPM_ALG_SM3_256));
-                    break;
-                }
-                if((retVal = FilterBootPolicy(&rawPolicy, &binaryName, &bootPolicy)) != TPM_RC_SUCCESS)
-                {
-                    TpmFail("FilterBootPolicy", __LINE__, retVal);
-                }
-                if(bootPolicy.t.info.isBinaryPolicy == YES)
-                {
-                    // We found a policy for this payload digest
-                    break;
-                }
+                TpmFail("FindBinaryPolicy", __LINE__, retVal);
             }
         }
     }
