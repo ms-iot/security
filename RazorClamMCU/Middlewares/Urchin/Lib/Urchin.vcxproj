@@ -1,0 +1,275 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B432834C-EB8F-4AA7-901F-0A7113ECC657}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Urchin</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Inc\UrchinLib.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ActivateCredential.cpp" />
+    <ClCompile Include="Certify.cpp" />
+    <ClCompile Include="CertifyCreation.cpp" />
+    <ClCompile Include="ChangeEPS.cpp" />
+    <ClCompile Include="ChangePPS.cpp" />
+    <ClCompile Include="Clear.cpp" />
+    <ClCompile Include="ClearControl.cpp" />
+    <ClCompile Include="ClockRateAdjust.cpp" />
+    <ClCompile Include="ClockSet.cpp" />
+    <ClCompile Include="CmdProcessor.cpp" />
+    <ClCompile Include="CommandCodeAttributesTables.cpp" />
+    <ClCompile Include="Commit.cpp" />
+    <ClCompile Include="ContextLoad.cpp" />
+    <ClCompile Include="ContextSave.cpp" />
+    <ClCompile Include="CpriHash.cpp" />
+    <ClCompile Include="CpriRSA.cpp" />
+    <ClCompile Include="CpriSym.cpp" />
+    <ClCompile Include="Create.cpp" />
+    <ClCompile Include="CreatePrimary.cpp" />
+    <ClCompile Include="CryptUtil.cpp" />
+    <ClCompile Include="DictionaryAttackLockReset.cpp" />
+    <ClCompile Include="DictionaryAttackParameters.cpp" />
+    <ClCompile Include="Duplicate.cpp" />
+    <ClCompile Include="ECC_Parameters.cpp" />
+    <ClCompile Include="ECDH_KeyGen.cpp" />
+    <ClCompile Include="ECDH_ZGen.cpp" />
+    <ClCompile Include="EC_Ephemeral.cpp" />
+    <ClCompile Include="EncryptDecrypt.cpp" />
+    <ClCompile Include="EventSequenceComplete.cpp" />
+    <ClCompile Include="EvictControl.cpp" />
+    <ClCompile Include="FieldUpgradeData.cpp" />
+    <ClCompile Include="FieldUpgradeStart.cpp" />
+    <ClCompile Include="FirmwareRead.cpp" />
+    <ClCompile Include="FlushContext.cpp" />
+    <ClCompile Include="GetCapability.cpp" />
+    <ClCompile Include="GetCommandAuditDigest.cpp" />
+    <ClCompile Include="GetRandom.cpp" />
+    <ClCompile Include="GetSessionAuditDigest.cpp" />
+    <ClCompile Include="GetTestResult.cpp" />
+    <ClCompile Include="GetTime.cpp" />
+    <ClCompile Include="Hash.cpp" />
+    <ClCompile Include="HashSequenceStart.cpp" />
+    <ClCompile Include="HierarchyChangeAuth.cpp" />
+    <ClCompile Include="HierarchyControl.cpp" />
+    <ClCompile Include="HMAC.cpp" />
+    <ClCompile Include="HMAC_Start.cpp" />
+    <ClCompile Include="Import.cpp" />
+    <ClCompile Include="IncrementalSelfTest.cpp" />
+    <ClCompile Include="Load.cpp" />
+    <ClCompile Include="LoadExternal.cpp" />
+    <ClCompile Include="MakeCredential.cpp" />
+    <ClCompile Include="Marshal.cpp" />
+    <ClCompile Include="MemoryLib.cpp" />
+    <ClCompile Include="NV_Certify.cpp" />
+    <ClCompile Include="NV_ChangeAuth.cpp" />
+    <ClCompile Include="NV_DefineSpace.cpp" />
+    <ClCompile Include="NV_Extend.cpp" />
+    <ClCompile Include="NV_GlobalWriteLock.cpp" />
+    <ClCompile Include="NV_Increment.cpp" />
+    <ClCompile Include="NV_Read.cpp" />
+    <ClCompile Include="NV_ReadLock.cpp" />
+    <ClCompile Include="NV_ReadPublic.cpp" />
+    <ClCompile Include="NV_SetBits.cpp" />
+    <ClCompile Include="NV_UndefineSpace.cpp" />
+    <ClCompile Include="NV_UndefineSpaceSpecial.cpp" />
+    <ClCompile Include="NV_Write.cpp" />
+    <ClCompile Include="NV_WriteLock.cpp" />
+    <ClCompile Include="ObjectChangeAuth.cpp" />
+    <ClCompile Include="PCR_Allocate.cpp" />
+    <ClCompile Include="PCR_Event.cpp" />
+    <ClCompile Include="PCR_Extend.cpp" />
+    <ClCompile Include="PCR_Read.cpp" />
+    <ClCompile Include="PCR_Reset.cpp" />
+    <ClCompile Include="PCR_SetAuthPolicy.cpp" />
+    <ClCompile Include="PCR_SetAuthValue.cpp" />
+    <ClCompile Include="PolicyAuthorize.cpp" />
+    <ClCompile Include="PolicyAuthValue.cpp" />
+    <ClCompile Include="PolicyCommandCode.cpp" />
+    <ClCompile Include="PolicyCounterTimer.cpp" />
+    <ClCompile Include="PolicyCpHash.cpp" />
+    <ClCompile Include="PolicyDuplicationSelect.cpp" />
+    <ClCompile Include="PolicyGetDigest.cpp" />
+    <ClCompile Include="PolicyLocality.cpp" />
+    <ClCompile Include="PolicyNameHash.cpp" />
+    <ClCompile Include="PolicyNV.cpp" />
+    <ClCompile Include="PolicyOR.cpp" />
+    <ClCompile Include="PolicyPassword.cpp" />
+    <ClCompile Include="PolicyPCR.cpp" />
+    <ClCompile Include="PolicyPhysicalPresence.cpp" />
+    <ClCompile Include="PolicyRestart.cpp" />
+    <ClCompile Include="PolicySecret.cpp" />
+    <ClCompile Include="PolicySigned.cpp" />
+    <ClCompile Include="PolicyTicket.cpp" />
+    <ClCompile Include="PP_Commands.cpp" />
+    <ClCompile Include="Quote.cpp" />
+    <ClCompile Include="ReadClock.cpp" />
+    <ClCompile Include="ReadPublic.cpp" />
+    <ClCompile Include="Rewrap.cpp" />
+    <ClCompile Include="RSA_Decrypt.cpp" />
+    <ClCompile Include="RSA_Encrypt.cpp" />
+    <ClCompile Include="SelfTest.cpp" />
+    <ClCompile Include="SequenceComplete.cpp" />
+    <ClCompile Include="SequenceUpdate.cpp" />
+    <ClCompile Include="SetAlgorithmSet.cpp" />
+    <ClCompile Include="SetCommandCodeAuditStatus.cpp" />
+    <ClCompile Include="SetPrimaryPolicy.cpp" />
+    <ClCompile Include="Shutdown.cpp" />
+    <ClCompile Include="Sign.cpp" />
+    <ClCompile Include="StartAuthSession.cpp" />
+    <ClCompile Include="Startup.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StirRandom.cpp" />
+    <ClCompile Include="TestParms.cpp" />
+    <ClCompile Include="Unseal.cpp" />
+    <ClCompile Include="VerifySignature.cpp" />
+    <ClCompile Include="ZGen_2Phase.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
