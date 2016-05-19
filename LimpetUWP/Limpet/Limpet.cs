@@ -5,21 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Tpm2Lib;
 
-namespace Limpet
+namespace Microsoft.Devices.Tpm
 {
-    public class LimpetDevice
+    public class TpmDevice
     {
         private const UInt32 AIOTH_PERSISTED_URI_INDEX = 0x01400100;
         private const UInt32 AIOTH_PERSISTED_KEY_HANDLE = 0x81000100;
         private const UInt32 SRK_HANDLE = 0x81000001;
 
         UInt32 logicalDeviceId = 0;
-        public LimpetDevice(UInt32 logicalDeviceId)
+        public TpmDevice(UInt32 logicalDeviceId)
         {
             this.logicalDeviceId = logicalDeviceId;
         }
 
-        public LimpetDevice(string DeviceIdName)
+        public TpmDevice(string DeviceIdName)
         {
             for(logicalDeviceId = 0; logicalDeviceId < 10; logicalDeviceId++)
             {

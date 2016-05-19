@@ -7,8 +7,8 @@
     <ProjectGuid>{9F957BD0-670B-4C96-B184-4978F41019E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Limpet</RootNamespace>
-    <AssemblyName>Limpet</AssemblyName>
+    <RootNamespace>Microsoft.Devices.Tpm</RootNamespace>
+    <AssemblyName>Microsoft.Devices.Tpm</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>
