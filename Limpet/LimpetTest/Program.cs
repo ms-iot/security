@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Limpet;
+using Microsoft.Devices.Tpm;
 
 namespace LimpetTest
 {
@@ -11,7 +11,7 @@ namespace LimpetTest
     {
         static void Main(string[] args)
         {
-            LimpetDevice myLimpet = new LimpetDevice(0);
+            TpmDevice myLimpet = new TpmDevice(0);
             string hwDeviceID = myLimpet.GetHardwareDeviceId();
         }
     }
