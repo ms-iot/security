@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>$id$</id>
+        <version>$Version$</version>
+        <title>Microsoft.Devices.Tpm</title>
+        <authors>Microsoft Corp</authors>
+        <requireLicenseAcceptance>true</requireLicenseAcceptance>
+        <licenseUrl>https://github.com/ms-iot/security/blob/master/Limpet/License.txt</licenseUrl>
+        <description>TPM support .NET library for Windows 10.</description>
+        <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288890</iconUrl>
+        <releaseNotes>initial version</releaseNotes>
+        <copyright>Copyright 2016</copyright>
+        <tags>Microsoft Windows TPM</tags>
+        <language>en-US</language>
+        <dependencies>
+            <!-- For now, .NET and UAP have the same set of dependencies -->
+            <group targetFramework="net45" >
+                <dependency id="Microsoft.TSS" version="1.0.3" />
+            </group>
+            <group targetFramework="uap">
+                <dependency id="Microsoft.TSS" version="1.0.3" />
+            </group>
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="$file1$" target="lib\uap10.0\Microsoft.Devices.Tpm.dll"/>
+        <file src="$file2$" target="lib\net45\Microsoft.Devices.Tpm.dll"/>
+    </files>
+</package>
