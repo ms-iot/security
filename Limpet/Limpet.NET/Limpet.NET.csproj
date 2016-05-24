@@ -7,8 +7,8 @@
     <ProjectGuid>{40C1D205-3C11-46D9-A557-86D9ED588216}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Limpet</RootNamespace>
-    <AssemblyName>Limpet</AssemblyName>
+    <RootNamespace>Microsoft.Devices.Tpm</RootNamespace>
+    <AssemblyName>Microsoft.Devices.Tpm</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -38,16 +38,17 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="TSS.NET, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.TSS.1.0.3\lib\net\TSS.NET.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Limpet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TSS.NET\TSS.NET.csproj">
-      <Project>{d5330ad6-d583-42b3-8f2c-48672ec9eb29}</Project>
-      <Name>TSS.NET</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
