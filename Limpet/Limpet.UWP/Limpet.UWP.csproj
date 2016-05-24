@@ -111,12 +111,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Limpet.rd.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TSS.UWP\TSS.UWP.csproj">
-      <Project>{129baac6-6a22-4153-aa32-1a2c5c6a8b76}</Project>
-      <Name>TSS.UWP</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

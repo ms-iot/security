@@ -54,10 +54,6 @@
       <Project>{40c1d205-3c11-46d9-a557-86d9ed588216}</Project>
       <Name>Limpet.NET</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TSS.NET\TSS.NET.csproj">
-      <Project>{d5330ad6-d583-42b3-8f2c-48672ec9eb29}</Project>
-      <Name>TSS.NET</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
