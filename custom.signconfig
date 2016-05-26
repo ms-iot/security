@@ -3,7 +3,7 @@
 <SignConfigXML>
   <!-- AnyCPU Release sign job -->
   <job platform="AnyCPU" configuration="Release" dest="__RELBINPATH__\signed" jobname="IOT Security" approvers="artemz;torstens">
-    <file src="__RELBINPATH__\Limpet.UWP\Microsoft.Devices.Tpm.dll" signType="Authenticode" dest="__RELBINPATH__\signed\Limpet.UWP\Microsoft.Devices.Tpm.dll" />
-    <file src="__RELBINPATH__\Microsoft.Devices.Tpm.dll" signType="Authenticode" dest="__RELBINPATH__\signed\Microsoft.Devices.Tpm.dll" />
+    <file src="__RELBINPATH__\Limpet.UWP\Microsoft.Devices.Tpm.Uwp.dll" signType="Authenticode" dest="__RELBINPATH__\signed\Microsoft.Devices.Tpm.Uwp.dll" />
+    <file src="__RELBINPATH__\Limpet.NET\Microsoft.Devices.Tpm.Net.dll" signType="Authenticode" dest="__RELBINPATH__\signed\Microsoft.Devices.Tpm.Net.dll" />
   </job>
 </SignConfigXML>
