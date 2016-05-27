@@ -12,7 +12,7 @@ function GetAssemblyVersionFromFile($filename) {
 }
 
 if (-Not (Test-Path 'NuGet.exe')) {
-    Invoke-WebRequest 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -OutFile 'NuGet.exe' 
+    Invoke-WebRequest 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -OutFile 'NuGet.exe'
 }
 
 # Delete existing packages to force rebuild
@@ -32,8 +32,8 @@ if($v1 -ne $v2) {
 
 $id='Microsoft.Devices.Tpm'
 
-$file1="..\Limpet.NET\bin\Release\Microsoft.Devices.Tpm.dll"
-$file2="..\Limpet.UWP\bin\Release\Microsoft.Devices.Tpm.dll"
+$file1="..\Limpet.NET\bin\Release\Microsoft.Devices.Tpm.Net.dll"
+$file2="..\Limpet.UWP\bin\Release\Microsoft.Devices.Tpm.Uwp.dll"
 
 echo "Creating NuGet package $id version $v1..."
 echo "Using files:"

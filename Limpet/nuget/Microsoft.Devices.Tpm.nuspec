@@ -21,7 +21,7 @@
         </dependencies>
     </metadata>
     <files>
-        <file src="$file1$" target="lib\net45\Microsoft.Devices.Tpm.dll"/>
-        <file src="$file2$" target="lib\uap10.0\Microsoft.Devices.Tpm.dll"/>
+        <file src="$file1$" target="lib\net45\Microsoft.Devices.Tpm.Net.dll"/>
+        <file src="$file2$" target="lib\uap10.0\Microsoft.Devices.Tpm.Uwp.dll"/>
     </files>
 </package>
