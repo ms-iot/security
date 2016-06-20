@@ -23,6 +23,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
+using Microsoft.Azure.Devices;
 
 namespace MSAAuthenticator
 {
@@ -108,7 +109,7 @@ namespace MSAAuthenticator
                 Console.WriteLine("  State   = {0}", subscription.State);
                 Console.WriteLine("  Account = {0}", subscription.Account);
 
-                ShowIoTHubsInSubscription(subscription.Id.ToString(), authtokens[i]);
+                ShowIoTHubsInSubscription(subscription.Id.ToString(), authtokens[i]).Wait();
             }
         }
 
@@ -220,7 +221,7 @@ namespace MSAAuthenticator
 
         private const string IoTHubPreviewApiVersion = "2015-08-15-preview";
 
-        public static void ShowIoTHubsInSubscription(string subscriptionId, string authorization)
+        public static async Task ShowIoTHubsInSubscription(string subscriptionId, string authorization)
         {
             string relativeUrl = string.Format(CultureInfo.InvariantCulture,
                                                "subscriptions/{0}/providers/Microsoft.Devices/IoTHubs?api-version={1}",
@@ -232,8 +233,6 @@ namespace MSAAuthenticator
 
             var message = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
 
-            //message.Headers.Authorization = AuthenticationHeaderValue.Parse(authorization);
-
             message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authorization);
 
             message.Headers.AcceptLanguage.TryParseAdd("en-US");
@@ -244,22 +243,70 @@ namespace MSAAuthenticator
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var str = response.Content.ReadAsStringAsync().Result;
+                var str = await response.Content.ReadAsStringAsync();
 
                 JObject o = JObject.Parse(str);
                 var hubList = o["value"];
 
                 foreach (var hub in hubList)
                 {
-                    var name = hub["name"];
-                    var location = hub["location"];
-                    var resourcegroup = hub["resourcegroup"];
+                    var name = hub["name"].ToString();
+                    var location = hub["location"].ToString();
+                    var resourcegroup = hub["resourcegroup"].ToString();
+                    var hubUri = hub["properties"]["hostName"].ToString();
 
                     Console.WriteLine("  IoT Hub:");
                     Console.WriteLine("    name          : {0}", name);
                     Console.WriteLine("    location      : {0}", location);
                     Console.WriteLine("    resourcegroup : {0}", resourcegroup);
+
+                    string primaryKey = await GetPrimaryKeyAsync(client, subscriptionId, authorization, resourcegroup, name);
+
+                    await ShowDevicesInHub(hubUri, primaryKey);
                 }
+            }
+        }
+
+        private static async Task<string> GetPrimaryKeyAsync(HttpClient client, string subscriptionId, string authorization, string resourceGroup, string hubName)
+        {
+            string relativeUrl = string.Format(CultureInfo.InvariantCulture,
+                                   "subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Devices/IotHubs/{2}/IoTHubKeys/listKeys?api-version={3}",
+                                   subscriptionId,
+                                   Uri.EscapeDataString(resourceGroup),
+                                   Uri.EscapeDataString(hubName),
+                                   IoTHubPreviewApiVersion);
+
+            var message = new HttpRequestMessage(HttpMethod.Post, relativeUrl);
+
+            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authorization);
+
+            message.Headers.AcceptLanguage.TryParseAdd("en-US");
+            message.Headers.Add("x-ms-version", "2013-11-01");
+            message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var response = await client.SendAsync(message);
+            var str = await response.Content.ReadAsStringAsync();
+            JObject o = JObject.Parse(str);
+
+            var keys = o["value"];
+
+            var primaryKey = keys.First(_ => _["keyName"].ToString() == "iothubowner")["primaryKey"].ToString();
+
+            return primaryKey;
+        }
+
+        private async static Task ShowDevicesInHub(string ioTHubUri, string primaryKey)
+        {
+            var connectionString = string.Format(CultureInfo.InvariantCulture,
+                "HostName={0};SharedAccessKeyName=iothubowner;SharedAccessKey={1}",
+                ioTHubUri, primaryKey);
+
+            var registryManager = RegistryManager.CreateFromConnectionString(connectionString);
+            var devices = await registryManager.GetDevicesAsync(1000);
+            Console.WriteLine("    Devices:");
+            foreach (var device in devices)
+            {
+                Console.WriteLine("      name          : {0}", device.Id);
             }
         }
 
