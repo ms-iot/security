@@ -31,13 +31,49 @@ namespace MSAAuthenticator
     {
         static void Main(string[] args)
         {
-            AzureAccount azureAccount = new AzureAccount();
-            azureAccount.Type = AzureAccount.AccountType.User;
+            try
+            {
+                if (args.Length == 0)
+                {
+                    AzureAccount azureAccount = new AzureAccount();
+                    azureAccount.Type = AzureAccount.AccountType.User;
 
-            var environment = AzureEnvironment.PublicEnvironments["AzureCloud"];
+                    var environment = AzureEnvironment.PublicEnvironments["AzureCloud"];
 
-            var auth = new Authenticator(AzureRmProfileProvider.Instance.Profile);
-            auth.Login(azureAccount, environment);
+                    var auth = new Authenticator(AzureRmProfileProvider.Instance.Profile);
+                    auth.Login(azureAccount, environment);
+                }
+                else if (args.Length == 2)
+                {
+                    var subcriptionId = args[0];
+                    var authToken = args[1];
+
+                    Authenticator.ShowIoTHubsInSubscription(subcriptionId, authToken).Wait();
+                }
+                else
+                {
+                    Console.WriteLine("Usage:");
+                    Console.WriteLine("MSAAuthenticator.exe");
+                    Console.WriteLine("    Pop up a credentials gatheting windows and list all IoT Hubs under all subscriptions associated with the user");
+                    Console.WriteLine("MSAAuthenticator.exe <subscription_id> <access_token>");
+                    Console.WriteLine("    Lists IoT Hubs abd devices given subscription_id and access_token");
+                }
+            }
+            catch (Exception ex)
+            {
+                var aggr = ex as System.AggregateException;
+                if (aggr != null)
+                {
+                    foreach (var inner in aggr.InnerExceptions)
+                    {
+                        Console.WriteLine("Exception: {0}", inner.Message);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Exception: {0}", ex.Message);
+                }
+            }
         }
     }
 
@@ -264,6 +300,10 @@ namespace MSAAuthenticator
 
                     await ShowDevicesInHub(hubUri, primaryKey);
                 }
+            }
+            else
+            {
+                throw new ApplicationException(string.Format("HTTP response is '{0}'", response.StatusCode));
             }
         }
 
