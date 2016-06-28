@@ -149,27 +149,17 @@ namespace MSAAuthenticator
             }
         }
 
-        private List<AzureTenant> ListAccountTenants(AzureAccount account, AzureEnvironment environment, ShowDialog promptBehavior)
+        private IEnumerable<AzureTenant> ListAccountTenants(AzureAccount account, AzureEnvironment environment, ShowDialog promptBehavior)
         {
-            List<AzureTenant> result = new List<AzureTenant>();
-            try
-            {
-                var commonTenantToken = AcquireAccessToken(account, environment, AuthenticationFactory.CommonAdTenant, promptBehavior);
+            var commonTenantToken = AcquireAccessToken(account, environment, AuthenticationFactory.CommonAdTenant, promptBehavior);
 
-                using (var subscriptionClient = AzureSession.ClientFactory.CreateCustomClient<SubscriptionClient>(
-                    new TokenCloudCredentials(commonTenantToken.AccessToken),
-                    environment.GetEndpointAsUri(AzureEnvironment.Endpoint.ResourceManager)))
-                {
-                    //TODO: Fix subscription client to not require subscriptionId
-                    result = MergeTenants(account, subscriptionClient.Tenants.List().TenantIds, commonTenantToken);
-                }
-            }
-            catch
+            using (var subscriptionClient = AzureSession.ClientFactory.CreateCustomClient<SubscriptionClient>(
+                new TokenCloudCredentials(commonTenantToken.AccessToken),
+                environment.GetEndpointAsUri(AzureEnvironment.Endpoint.ResourceManager)))
             {
-                Console.WriteLine(string.Format("Unable to acquire token for tenant '{0}'", AuthenticationFactory.CommonAdTenant));
+                return subscriptionClient.Tenants.List().TenantIds.Select
+                    (_ => new AzureTenant { Id = new Guid(_.TenantId), Domain = commonTenantToken.GetDomain() });
             }
-
-            return result;
         }
 
         private IAccessToken AcquireAccessToken(AzureAccount account,
@@ -233,36 +223,14 @@ namespace MSAAuthenticator
             }
         }
 
-        public static List<AzureTenant> MergeTenants(
-            AzureAccount account,
-            IEnumerable<TenantIdDescription> tenants,
-            IAccessToken token)
-        {
-            List<AzureTenant> result = null;
-            if (tenants != null)
-            {
-                var existingTenants = new List<AzureTenant>();
-                account.SetProperty(AzureAccount.Property.Tenants, null);
-                foreach(var t in tenants)
-                {
-                    existingTenants.Add(new AzureTenant { Id = new Guid(t.TenantId), Domain = token.GetDomain() });
-                    account.SetOrAppendProperty(AzureAccount.Property.Tenants, t.TenantId);
-                }
-
-                result = existingTenants;
-            }
-
-            return result;
-        }
-
-        private const string IoTHubPreviewApiVersion = "2015-08-15-preview";
+        private const string IoTHubApiVersion = "2016-02-03";
 
         public static async Task ShowIoTHubsInSubscription(string subscriptionId, string authorization)
         {
             string relativeUrl = string.Format(CultureInfo.InvariantCulture,
-                                               "subscriptions/{0}/providers/Microsoft.Devices/IoTHubs?api-version={1}",
+                                               "subscriptions/{0}/providers/Microsoft.Devices/IotHubs?api-version={1}",
                                                subscriptionId,
-                                               IoTHubPreviewApiVersion);
+                                               IoTHubApiVersion);
 
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri("https://management.azure.com");
@@ -314,7 +282,7 @@ namespace MSAAuthenticator
                                    subscriptionId,
                                    Uri.EscapeDataString(resourceGroup),
                                    Uri.EscapeDataString(hubName),
-                                   IoTHubPreviewApiVersion);
+                                   IoTHubApiVersion);
 
             var message = new HttpRequestMessage(HttpMethod.Post, relativeUrl);
 
