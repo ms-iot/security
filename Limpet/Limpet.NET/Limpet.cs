@@ -307,6 +307,7 @@ namespace Microsoft.Devices.Tpm
             string deviceId = GetDeviceId();
             string hostName = GetHostName();
             long expirationTime = (DateTime.Now.ToUniversalTime().ToFileTime() / WINDOWS_TICKS_PER_SEC) - EPOCH_DIFFERNECE;
+            expirationTime += validity;
             string sasToken = "";
             if ((hostName.Length > 0) && (deviceId.Length > 0))
             {
