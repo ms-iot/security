@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings>
+    <General>
+        <IntermediateDirectory>QCDB\Intermediate</IntermediateDirectory>
+        <OutputDirectory>QCDB\Output</OutputDirectory>
+        <PackageOutputDirectory>QCDB\PackageOutput</PackageOutputDirectory>
+    </General>
+    <Tools>
+        <Windows81KitsRoot>C:\Program Files (x86)\Windows Kits\8.1\</Windows81KitsRoot>
+        <Windows10KitsRoot>C:\Program Files (x86)\Windows Kits\10\</Windows10KitsRoot>
+    </Tools>
+    <SecureBoot>
+        <PlatformKey>
+            <PFX>Keys\OEM-PK.pfx</PFX>
+            <Cert>Keys\OEM-PK.cer</Cert>
+        </PlatformKey>
+        <KeyExchangeKey>
+            <PFX>Keys\OEM-UEFISB.pfx</PFX>
+            <Cert>Keys\OEM-UEFISB.cer</Cert>
+            <Cert>db\Microsoft Corporation KEK CA 2011.cer</Cert>
+        </KeyExchangeKey>
+        <Database>
+            <Cert>db\db_MSFTdevelopmentRoot.cer</Cert>
+            <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>
+            <Cert>db\db_MSFTproductionUEFIsigningCA.cer</Cert>
+            <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>
+            <Cert>db\db_MSFTproductionWindowsSigningCA2014.cer</Cert>
+            <Cert>db\db_MSFTtestSigningRoot.cer</Cert>
+            <Cert>db\db_MSFTUEFILogoTestSigner.cer</Cert>
+        </Database>
+    </SecureBoot>
+    <BitLocker>
+        <DataRecoveryAgent>Keys\OEM-DRA.cer</DataRecoveryAgent>
+    </BitLocker>
+    <SIPolicy>
+        <InitialPolicy>qcdb_InitialScan.xml</InitialPolicy>
+        <ScanPath>\\10.137.184.162\C$</ScanPath>
+        <Update>
+            <PFX>Keys\OEM-PAUTH.pfx</PFX>
+            <Cert>Keys\OEM-PAUTH.cer</Cert>
+        </Update>
+        <User>
+            <Cert>Keys\OEM-UMCI.cer</Cert>
+            <Cert>TestCerts\OEM_App_Test_Cert_2013.cer</Cert>
+            <Cert>TestCerts\MSFT_TemporaryKey.cer</Cert>
+
+            <!-- Enable this to allow all apps from the Microsoft App Store -->
+            <!--<Cert>db\MicrosoftMarketPlacePCA2011.cer</Cert>-->              <!-- Microsoft MarketPlace PCA 2011 --> 
+
+            <!-- Microsoft certificates -->
+            <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
+            <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
+            <Cert>db\MicrosoftDevelopmentPCA2014.cer</Cert>                     <!-- Microsoft Development PCA 2014 -->
+            <Cert>db\db_MSFTtestSigningRoot.cer</Cert>                          <!-- Microsoft Testing Root Certificate Authority 2010 -->
+        </User>
+        <Kernel>
+            <Cert>TestCerts\MSFT-KMCI-Sample.cer</Cert>
+            <Cert>TestCerts\OEM_HAL_Extension_Test_Cert_2013.cer</Cert>
+
+            <!-- Microsoft certificates -->
+            <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
+            <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
+            <Cert>db\MicrosoftDevelopmentPCA2014.cer</Cert>                     <!-- Microsoft Development PCA 2014 -->
+            <Cert>db\db_MSFTtestSigningRoot.cer</Cert>                          <!-- Microsoft Testing Root Certificate Authority 2010 -->
+        </Kernel>
+    </SIPolicy>
+    <Packaging>
+        <OemName>OEM</OemName>
+        <Architecture>arm</Architecture>
+        <BspVersion>10.0.1.0</BspVersion>
+        <SignToolOEMSign></SignToolOEMSign>
+    </Packaging>
+</Settings>
