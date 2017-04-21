@@ -6,7 +6,6 @@
         <PackageOutputDirectory>QCDB\PackageOutput</PackageOutputDirectory>
     </General>
     <Tools>
-        <Windows81KitsRoot>C:\Program Files (x86)\Windows Kits\8.1\</Windows81KitsRoot>
         <Windows10KitsRoot>C:\Program Files (x86)\Windows Kits\10\</Windows10KitsRoot>
     </Tools>
     <SecureBoot>
@@ -33,8 +32,8 @@
         <DataRecoveryAgent>Keys\OEM-DRA.cer</DataRecoveryAgent>
     </BitLocker>
     <SIPolicy>
-        <InitialPolicy>qcdb_InitialScan.xml</InitialPolicy>
-        <ScanPath>\\10.137.184.162\C$</ScanPath>
+        <!--InitialPolicy>qcdb_InitialScan.xml</InitialPolicy-->
+        <ScanPath>\\a.b.c.d\C$</ScanPath>
         <Update>
             <PFX>Keys\OEM-PAUTH.pfx</PFX>
             <Cert>Keys\OEM-PAUTH.cer</Cert>

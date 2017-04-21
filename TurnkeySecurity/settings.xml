@@ -6,7 +6,6 @@
         <PackageOutputDirectory>sample_output\PackageOutput</PackageOutputDirectory>
     </General>
     <Tools>
-        <Windows81KitsRoot>C:\Program Files (x86)\Windows Kits\8.1\</Windows81KitsRoot>
         <Windows10KitsRoot>C:\Program Files (x86)\Windows Kits\10\</Windows10KitsRoot>
     </Tools>
     <SecureBoot>
