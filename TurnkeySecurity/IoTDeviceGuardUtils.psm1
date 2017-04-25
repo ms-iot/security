@@ -5,15 +5,15 @@ Common utililty
 #>
 function GetSignToolFromConfig([xml] $config)
 {  
-    $Win81KitsRoot = (get-item -path $Config.Settings.Tools.Windows81KitsRoot).FullName
-    $SignTool=(get-item -path "$Win81KitsRoot\bin\x86\signtool.exe").FullName
+    $Win10KitsRoot = (get-item -path $Config.Settings.Tools.Windows10KitsRoot).FullName
+    $SignTool=(get-item -path "$Win10KitsRoot\bin\x86\signtool.exe").FullName
     return $SignTool
 }
 
 function GetpvkpfxFromConfig([xml] $config)
 {  
-    $Win81KitsRoot = (get-item -path $Config.Settings.Tools.Windows81KitsRoot).FullName
-    $pvkpfx=(get-item -path "$Win81KitsRoot\bin\x86\pvk2pfx.exe").FullName
+    $Win10KitsRoot = (get-item -path $Config.Settings.Tools.Windows10KitsRoot).FullName
+    $pvkpfx=(get-item -path "$Win10KitsRoot\bin\x86\pvk2pfx.exe").FullName
     return $pvkpfx
 }
 
@@ -78,7 +78,7 @@ function MakeCabSingle([xml] $config, $PackageXml)
         # Build the command
         $variables="_RELEASEDIR=$PackageOutputDir;OemName=$oemName"
         $BspVersion = $config.Settings.Packaging.BspVersion
-        $cmd = "`"$PkgGenCmd`" `"$($PackageXml.FullName)`" /config:`"$PkgConfigXml`" /output:`"$PackageOutputDir`" /version:$BspVersion /build:fre /cpu:$arch /variables:`"$variables`" /nohives" 
+        $cmd = "`"$PkgGenCmd`" `"$($PackageXml.FullName)`" /config:`"$PkgConfigXml`" /output:`"$PackageOutputDir`" /version:$BspVersion /build:fre /cpu:$arch /variables:`"$variables`" /onecore" 
         
 
         # Execute the command

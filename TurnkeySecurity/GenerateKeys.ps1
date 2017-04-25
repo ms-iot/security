@@ -11,7 +11,7 @@ function CreateDirectoryIfNotExist([string]$path)
     return (Get-Item -path $path)
 }
 
-$ToolsDir="C:\Program Files (x86)\Windows Kits\8.1\bin\x64\"
+$ToolsDir="C:\Program Files (x86)\Windows Kits\10\bin\x86\"
 $MakeCert=$ToolsDir+"makecert.exe"
 $pvkpfx=$ToolsDir+"pvk2pfx.exe"
 $SignTool=$ToolsDir+"signtool.exe"

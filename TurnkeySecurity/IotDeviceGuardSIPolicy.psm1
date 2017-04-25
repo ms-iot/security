@@ -6,7 +6,7 @@ Import-Module $PSScriptRoot\IoTDeviceGuardUtils.psm1 -Force
 
 function Get-SIPolicyOutputDirectory([xml] $config)
 {
-    $OutputDir = CreateDirectoryIfNotExist -path "$($Config.Settings.General.OutputDirectory)\SIPolicy"
+    $OutputDir = CreateDirectoryIfNotExist -path "$($Config.Settings.General.OutputDirectory)\DeviceGuard"
     return $OutputDir
 }
 
@@ -155,9 +155,9 @@ function New-IoTSIPolicyPackage([string] $ConfigFileName)
     {
         $OutputDir = Get-SIPolicyOutputDirectory -config $config
 
-        Copy-Item -Path "$PSScriptRoot\static-content\SIPolicy\*.*" -Destination $outputDir
+        Copy-Item -Path "$PSScriptRoot\static-content\DeviceGuard\*.*" -Destination $outputDir
         GenerateSIPolicy $config
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\DeviceGuard.SIPolicy.pkg.xml")
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard.pkg.xml")
     }
     finally
     {
