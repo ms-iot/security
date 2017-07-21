@@ -914,7 +914,7 @@ void SetEkTemplate(
 
 //*** ObjectComputeName()
 // This function computes the Name of an object from its public area.
-void
+TPM_RC
 ObjectComputeName(
     TPMT_PUBLIC         *publicArea,        // IN: public area of an object
     TPM2B_NAME          *name               // OUT: name of the object
@@ -928,10 +928,16 @@ ObjectComputeName(
     if(publicArea->nameAlg == TPM_ALG_NULL)
     {
         name->t.size = 0;
-        return;
+        return TPM_RC_SUCCESS;
     }
+
     // Start hash stack
     name->t.size = CryptStartHash(publicArea->nameAlg, &hashState);
+    if (name->t.size == 0)
+    {
+        // Only TPM_ALG_NULL should ever be 0
+        return TPM_RC_FAILURE;
+    }
 
     // Marshal the public area into its canonical form
     buffer = marshalBuffer.b.buffer;
@@ -947,7 +953,7 @@ ObjectComputeName(
     // set the nameAlg
     UINT16_TO_BYTE_ARRAY(publicArea->nameAlg, name->t.name);
     name->t.size += 2;
-    return;
+    return TPM_RC_SUCCESS;
 }
 
 //*** HandleGetType()

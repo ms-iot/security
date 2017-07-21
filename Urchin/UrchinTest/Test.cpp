@@ -1844,7 +1844,11 @@ TestSymKeyImport()
     importIn.objectPublic = hmacKey.obj.publicArea;
     importIn.inSymSeed.t.size = 0;
     importIn.symmetricAlg.algorithm = TPM_ALG_NULL;
-    ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
+    result = ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
+    if (result != TPM_RC_SUCCESS)
+    {
+        goto Cleanup;
+    }
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,
@@ -1901,7 +1905,11 @@ TestSymKeyImport()
     {
         goto Cleanup;
     }
-    ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
+    result = ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
+    if (result != TPM_RC_SUCCESS)
+    {
+        goto Cleanup;
+    }
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,
@@ -2028,7 +2036,11 @@ TestRsaKeyImport()
     importIn.objectPublic = rsaKey.obj.publicArea;
     importIn.inSymSeed.t.size = 0;
     importIn.symmetricAlg.algorithm = TPM_ALG_NULL;
-    ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
+    result = ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
+    if (result != TPM_RC_SUCCESS)
+    {
+        goto Cleanup;
+    }
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,
@@ -2093,7 +2105,11 @@ TestRsaKeyImport()
     {
         goto Cleanup;
     }
-    ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
+    result = ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
+    if (result != TPM_RC_SUCCESS)
+    {
+        goto Cleanup;
+    }
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,

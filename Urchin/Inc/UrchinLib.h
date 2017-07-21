@@ -12959,7 +12959,7 @@ TPM2B_DIGEST    *cpHash,            // OUT: cpHash
 TPM2B_DIGEST    *nameHash           // OUT: name hash of command
 );
 
-void
+TPM_RC
 ObjectComputeName(
 TPMT_PUBLIC *publicArea,        // IN: public area of an object
 TPM2B_NAME *name                // OUT: name of the object
