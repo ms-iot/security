@@ -6,14 +6,14 @@ Common utililty
 function GetSignToolFromConfig([xml] $config)
 {  
     $Win10KitsRoot = (get-item -path $Config.Settings.Tools.Windows10KitsRoot).FullName
-    $SignTool=(get-item -path "$Win10KitsRoot\bin\x86\signtool.exe").FullName
+    $SignTool=(get-item -path "$Win10KitsRoot\bin\$WindowsSDKVersion\x86\signtool.exe").FullName
     return $SignTool
 }
 
 function GetpvkpfxFromConfig([xml] $config)
 {  
     $Win10KitsRoot = (get-item -path $Config.Settings.Tools.Windows10KitsRoot).FullName
-    $pvkpfx=(get-item -path "$Win10KitsRoot\bin\x86\pvk2pfx.exe").FullName
+    $pvkpfx=(get-item -path "$Win10KitsRoot\bin\$WindowsSDKVersion\x86\pvk2pfx.exe").FullName
     return $pvkpfx
 }
 
