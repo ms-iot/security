@@ -7,6 +7,7 @@
     </General>
     <Tools>
         <Windows10KitsRoot>C:\Program Files (x86)\Windows Kits\10\</Windows10KitsRoot>
+		<WindowsSDKVersion>10.0.15063.0</WindowsSDKVersion>
     </Tools>
     <SecureBoot>
         <PlatformKey>
@@ -32,7 +33,11 @@
         <DataRecoveryAgent>Keys\OEM-DRA.cer</DataRecoveryAgent>
     </BitLocker>
     <SIPolicy>
-        <ScanPath>your path to scan</ScanPath>
+        <!-- Update the Device Path for IPAddress: a.b.c.d using 1 or 2
+		   1. net use \\a.b.c.d\c$ /user:username password 
+		   2. Drive letter when connected through mass storage mode
+		-->
+        <ScanPath>\\a.b.c.d\c$</ScanPath>
         <Update>
             <PFX>Keys\OEM-PAUTH.pfx</PFX>
             <Cert>Keys\OEM-PAUTH.cer</Cert>
