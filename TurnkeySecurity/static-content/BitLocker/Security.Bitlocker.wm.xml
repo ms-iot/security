@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<identity xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="BitLocker"
+    namespace="Security"
+    owner="$(OEMNAME)"
+    legacyName="$(OEMNAME).Security.BitLocker" xmlns="urn:Microsoft.CompPlat/ManifestSchema.v1.00">
+    <onecorePackageInfo
+        targetPartition="MainOS"
+        releaseType="Production"
+        ownerType="OEM" />
+    <files>
+        <file
+            destinationDir="$(runtime.bootDrive)\IoTSec"
+            source="DETask.xml" />
+        <file
+            destinationDir="$(runtime.bootDrive)\IoTSec"
+            source="setup.bitlocker.cmd" />
+    </files>
+    <regKeys>
+        <regKey
+            keyName="$(hklm.software)\Policies\Microsoft\SystemCertificates\FVE" />
+        <regKey
+            keyName="$(hklm.software)\Policies\Microsoft\SystemCertificates\FVE\Certificates" />
+        <regKey
+            keyName="$(hklm.software)\Policies\Microsoft\SystemCertificates\FVE\Certificates\{_DRA_THUMBPRINT_}">
+            <regValue
+                name="Blob"
+                type="REG_BINARY"
+                value="{_DRA_CERT_BLOB_}" />
+        </regKey>
+        <regKey
+            keyName="$(hklm.software)\Policies\Microsoft\SystemCertificates\FVE\CRLs" />
+        <regKey
+            keyName="$(hklm.software)\Policies\Microsoft\SystemCertificates\FVE\CTLs" />
+        <regKey
+            keyName="$(hklm.software)\Policies\Microsoft\FVE">
+            <regValue
+                name="OSManageDRA"
+                type="REG_DWORD"
+                value="0x00000001" />
+            <regValue
+                name="FDVManageDRA"
+                type="REG_DWORD"
+                value="0x00000001" />
+            <regValue
+                name="RDVManageDRA"
+                type="REG_DWORD"
+                value="0x00000001" />
+            <regValue
+                name="IdentificationField"
+                type="REG_DWORD"
+                value="0x00000001" />
+            <regValue
+                name="IdentificationFieldString"
+                type="REG_SZ"
+                value="BitLocker" />
+            <regValue
+                name="SecondaryIdentificationField"
+                type="REG_SZ"
+                value="BitLocker" />
+            <regValue
+                name="SelfSignedCertificates"
+                type="REG_DWORD"
+                value="0x00000001" />
+            <regValue
+                name="RDVDeviceBinding"
+                type="REG_DWORD"
+                value="0x00000001" />
+            <regValue
+                name="OSEnablePrebootInputProtectorsOnSlates"
+                type="REG_DWORD"
+                value="0x00000001" />
+        </regKey>
+    </regKeys>
+</identity>

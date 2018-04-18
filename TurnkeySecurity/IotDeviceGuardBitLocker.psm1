@@ -25,7 +25,8 @@ function GenerateBitlockerDataRecoveryAgentPackageXml([xml] $config)
         $blob = (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\SystemCertificates\My\Certificates\$thumbprint).Blob
 
         # convert 'blob' from array to 'int' to a comma delimited string of hex values
-        $blob = (($blob | foreach {$_.ToString("x2") }) -join ',')
+        #$blob = (($blob | foreach {$_.ToString("x2") }) -join ',')
+        $blob = (($blob | foreach {$_.ToString("x2") }) -join '')
     }
     finally
     {
@@ -33,7 +34,7 @@ function GenerateBitlockerDataRecoveryAgentPackageXml([xml] $config)
     }
 
     # load the template
-    $packageXml = get-item -path $OutputDir\Security.Bitlocker.pkg.xml
+    $packageXml = get-item -path $OutputDir\Security.Bitlocker.wm.xml
     $content =  Get-Content -path $packageXml
       
     # replace the placeholder with actual values and write back the file
@@ -84,7 +85,7 @@ function New-IoTBitLockerPackage([string] $ConfigFileName)
 
         Copy-Item -Path "$PSScriptRoot\static-content\BitLocker\*.*" -Destination $outputDir
         GenerateBitlockerDataRecoveryAgentPackageXml -config $config
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.BitLocker.pkg.xml")
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.BitLocker.wm.xml")
     }
     finally
     {

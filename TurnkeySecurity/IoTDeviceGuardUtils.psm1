@@ -80,7 +80,7 @@ function MakeCabSingle([xml] $config, $PackageXml)
         # Build the command
         $variables="_RELEASEDIR=$PackageOutputDir;OemName=$oemName"
         $BspVersion = $config.Settings.Packaging.BspVersion
-        $cmd = "`"$PkgGenCmd`" `"$($PackageXml.FullName)`" /config:`"$PkgConfigXml`" /output:`"$PackageOutputDir`" /version:$BspVersion /build:fre /cpu:$arch /variables:`"$variables`" /onecore" 
+        $cmd = "`"$PkgGenCmd`" `"$($PackageXml.FullName)`" /config:`"$PkgConfigXml`" /output:`"$PackageOutputDir`" /version:$BspVersion /build:fre /cpu:$arch /variables:`"$variables`" /onecore /universalbsp" 
         
 
         # Execute the command

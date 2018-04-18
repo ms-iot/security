@@ -106,7 +106,7 @@ function New-IoTSecureBootPackage([string] $ConfigFileName)
 
         Copy-Item -Path "$PSScriptRoot\static-content\SecureBoot\*.*" -Destination $outputDir
         GenerateSecureBootFiles -config $config
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.SecureBoot.pkg.xml")
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.SecureBoot.wm.xml")
     }
     finally
     {
