@@ -24,8 +24,7 @@ function GenerateBitlockerDataRecoveryAgentPackageXml([xml] $config)
         Import-Certificate -FilePath $dra -CertStoreLocation Cert:\LocalMachine\My
         $blob = (Get-ItemProperty HKLM:\SOFTWARE\Microsoft\SystemCertificates\My\Certificates\$thumbprint).Blob
 
-        # convert 'blob' from array to 'int' to a comma delimited string of hex values
-        #$blob = (($blob | foreach {$_.ToString("x2") }) -join ',')
+        # convert 'blob' from array to 'int' to a string of hex values
         $blob = (($blob | foreach {$_.ToString("x2") }) -join '')
     }
     finally
