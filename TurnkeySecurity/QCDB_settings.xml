@@ -7,7 +7,7 @@
     </General>
     <Tools>
         <Windows10KitsRoot>C:\Program Files (x86)\Windows Kits\10\</Windows10KitsRoot>
-		<WindowsSDKVersion>10.0.15063.0</WindowsSDKVersion>
+        <WindowsSDKVersion>10.0.16299.0</WindowsSDKVersion>
     </Tools>
     <SecureBoot>
         <PlatformKey>
@@ -34,13 +34,13 @@
     </BitLocker>
     <SIPolicy>
         <!--InitialPolicy>qcdb_InitialScan.xml</InitialPolicy-->
-		
+        
         <!-- Update the Device Path for IPAddress: a.b.c.d using 1 or 2
-		   1. net use \\a.b.c.d\c$ /user:username password 
-		   2. Drive letter when connected through mass storage mode
-		-->
+           1. net use \\a.b.c.d\c$ /user:username password 
+           2. Drive letter when connected through mass storage mode
+        -->
         <ScanPath>\\a.b.c.d\c$</ScanPath>
-		
+        
         <Update>
             <PFX>Keys\OEM-PAUTH.pfx</PFX>
             <Cert>Keys\OEM-PAUTH.cer</Cert>
@@ -51,7 +51,7 @@
             <Cert>TestCerts\MSFT_TemporaryKey.cer</Cert>
 
             <!-- Enable this to allow all apps from the Microsoft App Store -->
-            <!--<Cert>db\MicrosoftMarketPlacePCA2011.cer</Cert>-->              <!-- Microsoft MarketPlace PCA 2011 --> 
+            <!--Cert>db\MicrosoftMarketPlacePCA2011.cer</Cert-->              <!-- Microsoft MarketPlace PCA 2011 --> 
 
             <!-- Microsoft certificates -->
             <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
@@ -62,7 +62,6 @@
         <Kernel>
             <Cert>TestCerts\MSFT-KMCI-Sample.cer</Cert>
             <Cert>TestCerts\OEM_HAL_Extension_Test_Cert_2013.cer</Cert>
-
             <!-- Microsoft certificates -->
             <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
             <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
@@ -74,6 +73,6 @@
         <OemName>OEM</OemName>
         <Architecture>arm</Architecture>
         <BspVersion>10.0.1.0</BspVersion>
-        <SignToolOEMSign></SignToolOEMSign>
+        <SignToolOEMSign>/a /s my /i "Windows OEM Intermediate 2017 (TEST ONLY)" /n "Windows OEM Test Cert 2017 (TEST ONLY)" /fd SHA256</SignToolOEMSign>
     </Packaging>
 </Settings>

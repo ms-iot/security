@@ -70,7 +70,7 @@ function MakeCabSingle([xml] $config, $PackageXml)
         # Set env variables
         $env:Path= "$Win10KitsRootBinPath;$env:Path"
 
-        if ([string]::IsNullOrWhiteSpace($config.Settings.Packaging.SignToolOEMSign))
+        if (![string]::IsNullOrWhiteSpace($config.Settings.Packaging.SignToolOEMSign))
         {
             $env:SIGNTOOL_OEM_SIGN=$config.Settings.Packaging.SignToolOEMSign
             $env:SIGN_WITH_TIMESTAMP=1
