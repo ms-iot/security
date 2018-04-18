@@ -70,7 +70,7 @@ function MakeCabSingle([xml] $config, $PackageXml)
         # Set env variables
         $env:Path= "$Win10KitsRootBinPath;$env:Path"
 
-        if ([string]::IsNullOrWhiteSpace($config.Settings.Packaging.SignToolOEMSign))
+        if (![string]::IsNullOrWhiteSpace($config.Settings.Packaging.SignToolOEMSign))
         {
             $env:SIGNTOOL_OEM_SIGN=$config.Settings.Packaging.SignToolOEMSign
             $env:SIGN_WITH_TIMESTAMP=1
@@ -80,7 +80,7 @@ function MakeCabSingle([xml] $config, $PackageXml)
         # Build the command
         $variables="_RELEASEDIR=$PackageOutputDir;OemName=$oemName"
         $BspVersion = $config.Settings.Packaging.BspVersion
-        $cmd = "`"$PkgGenCmd`" `"$($PackageXml.FullName)`" /config:`"$PkgConfigXml`" /output:`"$PackageOutputDir`" /version:$BspVersion /build:fre /cpu:$arch /variables:`"$variables`" /onecore" 
+        $cmd = "`"$PkgGenCmd`" `"$($PackageXml.FullName)`" /config:`"$PkgConfigXml`" /output:`"$PackageOutputDir`" /version:$BspVersion /build:fre /cpu:$arch /variables:`"$variables`" /onecore /universalbsp" 
         
 
         # Execute the command

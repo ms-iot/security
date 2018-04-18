@@ -71,6 +71,6 @@
         <OemName>OEM</OemName>
         <Architecture></Architecture>
         <BspVersion>10.0.1.0</BspVersion>
-        <SignToolOEMSign></SignToolOEMSign>
+        <SignToolOEMSign>/a /s my /i "Windows OEM Intermediate 2017 (TEST ONLY)" /n "Windows OEM Test Cert 2017 (TEST ONLY)" /fd SHA256</SignToolOEMSign>
     </Packaging>
 </Settings>

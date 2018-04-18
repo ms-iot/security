@@ -157,7 +157,7 @@ function New-IoTSIPolicyPackage([string] $ConfigFileName)
 
         Copy-Item -Path "$PSScriptRoot\static-content\DeviceGuard\*.*" -Destination $outputDir
         GenerateSIPolicy $config
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard.pkg.xml")
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard.wm.xml")
     }
     finally
     {

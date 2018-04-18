@@ -23,7 +23,7 @@ function New-IoTOEMCustomizationPackage([string] $ConfigFileName)
         $OutputDir = Get-OEMCustomizationOutputDirectory -config $config
 
         Copy-Item -Path "$PSScriptRoot\static-content\OEMCustomization\*.*" -Destination $outputDir
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Custom.Cmd.pkg.xml ")
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Custom.Cmd.wm.xml ")
     }
     finally
     {
