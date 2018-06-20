@@ -27,6 +27,18 @@ extern TPM2B_AUTH g_LockoutAuth;
 extern TPM2B_AUTH g_EndorsementAuth;
 extern TPM2B_AUTH g_StorageAuth;
 
+BOOL
+Base64encodeW(
+TPM2B_AUTH *auth,
+__out_ecount_opt(cchEncodedStringSize) PWSTR pszEncodedString,
+DWORD cchEncodedStringSize,
+PDWORD pcchEncoded
+);
+BOOL
+Base64decodeW(
+_In_z_ PWSTR pszEncodedString,
+_Inout_ TPM2B_AUTH *auth
+);
 void
 InitializeVirtualizationMgr(
 );

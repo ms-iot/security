@@ -36,9 +36,7 @@ BCRYPT_ALG_HANDLE g_hAesAlg = NULL;
 //** Random Number Generation
 
 BOOL
-_cpri__RngStartup(
-    void
-    )
+_cpri__RngStartup(void)
 {
     return (BCryptOpenAlgorithmProvider(&g_hRngAlg, BCRYPT_RNG_ALGORITHM, NULL, 0) == ERROR_SUCCESS);
 }
@@ -72,6 +70,7 @@ _cpri__GenerateRandom(
 }
 
 //** Hash Functions
+
 //*** _cpri__HashStartup()
 // Function that is called to initialize the hash service. In this implementation,
 // this function does nothing but it is called by the CryptUtilStartup() function
@@ -79,7 +78,7 @@ _cpri__GenerateRandom(
 BOOL
 _cpri__HashStartup(
     void
-    )
+)
 {
 #pragma warning (disable:4127)
 #pragma warning (disable:6237)
@@ -651,38 +650,31 @@ PlatformSubmitTPM20Command(
 }
 
 void
-PlattformRetrieveAuthValues(
-    void
-    )
+PlattformRetrieveAuthValues()
 {
     WCHAR authValue[255] = L"";
     DWORD authValueSize = sizeof(authValue);
-    DWORD allowedSize = sizeof(g_LockoutAuth.t.buffer);
 
+    authValueSize = sizeof(authValue);
     if((RegGetValueW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\TPM\\WMI\\Admin", L"OwnerAuthFull", RRF_RT_REG_SZ, NULL, authValue, &authValueSize) != ERROR_SUCCESS) ||
-       (!CryptStringToBinaryW(authValue, 0, CRYPT_STRING_BASE64, g_LockoutAuth.t.buffer, &allowedSize, NULL, NULL)))
+       (!Base64decodeW(authValue, &g_LockoutAuth)))
     {
         MemorySet(&g_LockoutAuth, 0x00, sizeof(g_LockoutAuth));
     }
-    g_LockoutAuth.t.size = (UINT16)allowedSize;
 
     authValueSize = sizeof(authValue);
-    allowedSize = sizeof(g_StorageAuth.t.buffer);
     if((RegGetValueW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\TPM\\WMI\\Admin", L"StorageOwnerAuth", RRF_RT_REG_SZ, NULL, authValue, &authValueSize) != ERROR_SUCCESS) ||
-       (!CryptStringToBinaryW(authValue, 0, CRYPT_STRING_BASE64, g_StorageAuth.t.buffer, &allowedSize, NULL, NULL)))
+        (!Base64decodeW(authValue, &g_StorageAuth)))
     {
         MemorySet(&g_StorageAuth, 0x00, sizeof(g_StorageAuth));
     }
-    g_StorageAuth.t.size = (UINT16)allowedSize;
 
     authValueSize = sizeof(authValue);
-    allowedSize = sizeof(g_EndorsementAuth.t.buffer);
     if((RegGetValueW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\TPM\\WMI\\Endorsement", L"EndorsementAuth", RRF_RT_REG_SZ, NULL, authValue, &authValueSize) != ERROR_SUCCESS) ||
-        (!CryptStringToBinaryW(authValue, 0, CRYPT_STRING_BASE64, g_EndorsementAuth.t.buffer, &allowedSize, NULL, NULL)))
+       (!Base64decodeW(authValue, &g_EndorsementAuth)))
     {
         MemorySet(&g_EndorsementAuth, 0x00, sizeof(g_EndorsementAuth));
     }
-    g_EndorsementAuth.t.size = (UINT16)allowedSize;
 }
 
 int
@@ -701,9 +693,7 @@ TpmFail(
 }
 
 void
-_cpri__PlatformRelease(
-    void
-    )
+_cpri__PlatformRelease(void)
 {
     if (g_hTbs != NULL)
     {
@@ -715,9 +705,7 @@ _cpri__PlatformRelease(
 }
 
 void
-_cpri__PlatformReleaseCrypt(
-    void
-    )
+_cpri__PlatformReleaseCrypt(void)
 {
     if (g_hRngAlg != NULL)
     {

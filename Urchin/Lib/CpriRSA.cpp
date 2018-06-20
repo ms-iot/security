@@ -214,6 +214,10 @@ OaepDecode(
                              paddedSize-hLen-1, &padded[hLen+1])) < 0)
         return retVal;
 
+    if(sizeof(seedMask) < hLen)
+    {
+        return CRYPT_FAIL;
+    }
     // Recover the seed into seedMask
     pp = &padded[1];
     pm = seedMask;

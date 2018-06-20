@@ -13,6 +13,8 @@
 #include <string.h>
 #include "UrchinLib.h"
 
+using namespace UL;
+
 #ifdef USE_TPM_SIMULATOR
 // Linked Simulator Hookup
 extern "C"

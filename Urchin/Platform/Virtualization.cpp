@@ -136,21 +136,35 @@ SwapObjectOut(PCONTEXT_TABLE_OBJECT object)
 {
     DEFINE_CALL_BUFFERS;
     UINT32 result = TPM_RC_SUCCESS;
-    ContextSave_In contextSaveIn;
-    ContextSave_Out contextSaveOut;
+    ContextSave_In* contextSaveIn = NULL;
+    ContextSave_Out* contextSaveOut = NULL;
+    contextSaveIn = (ContextSave_In*) LocalAlloc(LPTR, sizeof(ContextSave_In));
+    contextSaveOut = (ContextSave_Out*)LocalAlloc(LPTR, sizeof(ContextSave_Out));
 
+    if(contextSaveIn == NULL) 
+    {
+        result = TPM_RC_FAILURE;
+        goto Cleanup;
+    }
+    if(contextSaveOut == NULL) 
+    {
+        result = TPM_RC_FAILURE;
+        goto Cleanup;
+    }
     if(object->physicalHdl == OBJECT_NOT_LOADED)
     {
         goto Cleanup;
     }
 
     // Unload the object
-    INITIALIZE_CALL_BUFFERS(TPM2_ContextSave, &contextSaveIn, &contextSaveOut);
+    INITIALIZE_CALL_BUFFERS(TPM2_ContextSave, contextSaveIn, contextSaveOut);
     parms.objectTableIn[TPM2_ContextSave_HdlIn_SaveHandle].generic.handle = object->physicalHdl;
     EXECUTE_TPM_CALL(FALSE, TPM2_ContextSave);
-    object->context = contextSaveOut.context;
+    object->context = contextSaveOut->context;
 
 Cleanup:
+    LocalFree(contextSaveIn);
+    LocalFree(contextSaveOut);
     return result;
 }
 
@@ -159,21 +173,35 @@ SwapObjectIn(PCONTEXT_TABLE_OBJECT object)
 {
     DEFINE_CALL_BUFFERS;
     UINT32 result = TPM_RC_SUCCESS;
-    ContextLoad_In contextLoadIn;
-    ContextLoad_Out contextLoadOut;
+    ContextLoad_In* contextLoadIn = NULL;
+    ContextLoad_Out* contextLoadOut = NULL;
 
+    contextLoadIn = (ContextLoad_In*) LocalAlloc(LPTR, sizeof(ContextLoad_In));
+    contextLoadOut = (ContextLoad_Out*) LocalAlloc(LPTR, sizeof(ContextLoad_Out));
+    if(contextLoadIn == NULL)
+    {
+        result = TPM_RC_FAILURE;
+        goto Cleanup;
+    }
+    if(contextLoadOut == NULL)
+    {
+        result = TPM_RC_FAILURE;
+        goto Cleanup;
+    }
     if(object->physicalHdl != OBJECT_NOT_LOADED)
     {
         goto Cleanup;
     }
 
     // Load the context
-    INITIALIZE_CALL_BUFFERS(TPM2_ContextLoad, &contextLoadIn, &contextLoadOut);
-    contextLoadIn.context = object->context;
+    INITIALIZE_CALL_BUFFERS(TPM2_ContextLoad, contextLoadIn, contextLoadOut);
+    contextLoadIn->context = object->context;
     EXECUTE_TPM_CALL(FALSE, TPM2_ContextLoad);
     object->physicalHdl = parms.objectTableOut[TPM2_ContextLoad_HdlOut_LoadedHandle].generic.handle;
 
 Cleanup:
+    LocalFree(contextLoadIn);
+    LocalFree(contextLoadOut);
     return result;
 }
 

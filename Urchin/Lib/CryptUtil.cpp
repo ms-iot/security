@@ -2926,11 +2926,7 @@ CryptCreateObject(
 
     // Set the sensitive type for the object
     sensitive->sensitiveType = publicArea->type;
-    result = ObjectComputeName(publicArea, &name);
-    if (result != TPM_RC_SUCCESS)
-    {
-        return result;
-    }
+    ObjectComputeName(publicArea, &name);
 
     // For all objects, copy the initial auth data
     sensitive->authValue = sensitiveCreate->userAuth;

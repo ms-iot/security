@@ -80,14 +80,14 @@ ImportPubKey(
     pKey->cbModulus = tKey->obj.publicArea.t.publicArea.unique.rsa.t.size;
     if(tKey->obj.publicArea.t.publicArea.parameters.rsaDetail.exponent == 0)
     {
-        memcpy(&buffer[sizeof(BCRYPT_RSAKEY_BLOB)], defaultExponent, pKey->cbPublicExp);
+        memcpy_s(&buffer[sizeof(BCRYPT_RSAKEY_BLOB)], 1024-sizeof(BCRYPT_RSAKEY_BLOB), defaultExponent, pKey->cbPublicExp);
     }
     else
     {
         PBYTE expBuf = &buffer[sizeof(BCRYPT_RSAKEY_BLOB)];
         UINT32_Marshal(&tKey->obj.publicArea.t.publicArea.parameters.rsaDetail.exponent, &expBuf, NULL);
     }
-    memcpy(&buffer[sizeof(BCRYPT_RSAKEY_BLOB) + pKey->cbPublicExp], tKey->obj.publicArea.t.publicArea.unique.rsa.t.buffer, pKey->cbModulus);
+    memcpy_s(&buffer[sizeof(BCRYPT_RSAKEY_BLOB) + pKey->cbPublicExp], 1024-(sizeof(BCRYPT_RSAKEY_BLOB) + pKey->cbPublicExp), tKey->obj.publicArea.t.publicArea.unique.rsa.t.buffer, pKey->cbModulus);
     if((status = BCryptImportKeyPair(g_hRsaAlg, NULL, BCRYPT_RSAPUBLIC_BLOB, hKey, buffer, sizeof(BCRYPT_RSAKEY_BLOB) + pKey->cbPublicExp + pKey->cbModulus, 0)) !=0)
     {
         return status;
@@ -188,12 +188,8 @@ CreateAndLoadAikObject()
     testParmsIn.parameters.parameters.rsaDetail.scheme.scheme = TPM_ALG_RSAPSS;
     testParmsIn.parameters.parameters.rsaDetail.scheme.details.rsapss.hashAlg = TPM_ALG_SHA256;
     testParmsIn.parameters.parameters.rsaDetail.keyBits = 2048;
-    TRY_TPM_CALL(FALSE, TPM2_TestParms);
-	if((result != TPM_RC_SUCCESS) && (result != TPM_E_COMMAND_BLOCKED))
-	{
-		// This command may not be implemented. That's no big deal
-		goto Cleanup;
-	}
+    EXECUTE_TPM_CALL(FALSE, TPM2_TestParms);
+
 
     // Create the session
     sessionTable[0].handle = TPM_RS_PW;
@@ -1844,11 +1840,7 @@ TestSymKeyImport()
     importIn.objectPublic = hmacKey.obj.publicArea;
     importIn.inSymSeed.t.size = 0;
     importIn.symmetricAlg.algorithm = TPM_ALG_NULL;
-    result = ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
-    if (result != TPM_RC_SUCCESS)
-    {
-        goto Cleanup;
-    }
+    ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,
@@ -1905,11 +1897,7 @@ TestSymKeyImport()
     {
         goto Cleanup;
     }
-    result = ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
-    if (result != TPM_RC_SUCCESS)
-    {
-        goto Cleanup;
-    }
+    ObjectComputeName(&hmacKey.obj.publicArea.t.publicArea, &name);
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,
@@ -2036,11 +2024,7 @@ TestRsaKeyImport()
     importIn.objectPublic = rsaKey.obj.publicArea;
     importIn.inSymSeed.t.size = 0;
     importIn.symmetricAlg.algorithm = TPM_ALG_NULL;
-    result = ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
-    if (result != TPM_RC_SUCCESS)
-    {
-        goto Cleanup;
-    }
+    ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,
@@ -2105,11 +2089,7 @@ TestRsaKeyImport()
     {
         goto Cleanup;
     }
-    result = ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
-    if (result != TPM_RC_SUCCESS)
-    {
-        goto Cleanup;
-    }
+    ObjectComputeName(&rsaKey.obj.publicArea.t.publicArea, &name);
     SensitiveToDuplicate(&sensitive,
                          &name,
                          &g_SrkObject,

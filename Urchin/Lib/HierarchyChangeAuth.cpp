@@ -56,6 +56,7 @@ TPM2_HierarchyChangeAuth_Unmarshal(
 )
 {
     TPM_RC result = TPM_RC_SUCCESS;
+    TPM2B_AUTH oldAuth = { 0 };
     HierarchyChangeAuth_In *in = (HierarchyChangeAuth_In *)parms->parmIn;
 //    HierarchyChangeAuth_Out *out = (HierarchyChangeAuth_Out *)parms->parmOut;
 
@@ -67,6 +68,8 @@ TPM2_HierarchyChangeAuth_Unmarshal(
     {
         return TPM_RC_FAILURE;
     }
+    oldAuth = parms->objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.authValue;
+    parms->objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.authValue = in->newAuth;
     if((result = Command_Unmarshal(
         TPM_CC_HierarchyChangeAuth,
         sessionTable,
@@ -74,10 +77,11 @@ TPM2_HierarchyChangeAuth_Unmarshal(
         TPM2_HierarchyChangeAuth_Parameter_Unmarshal,
         parms,
         buffer,
-        size)) == TPM_RC_SUCCESS)
+        size)) != TPM_RC_SUCCESS)
     {
-        parms->objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.authValue = in->newAuth;
+        parms->objectTableIn[TPM2_HierarchyChangeAuth_HdlIn_AuthHandle].entity.authValue = oldAuth;
     }
+    MemorySet(oldAuth.t.buffer, 0x00, sizeof(oldAuth.t.buffer));
     return result;
 }
 
