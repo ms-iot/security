@@ -28,9 +28,8 @@ TPM2_NV_ChangeAuth_Marshal(
     INT32 *size
 )
 {
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
         (parms->objectCntIn < TPM2_NV_ChangeAuth_HdlCntIn) ||
-//        (parms->objectCntOut < TPM2_NV_ChangeAuth_HdlCntOut) ||
         (parms->parmIn == NULL) ||
         (parms->parmOut == NULL))
     {
@@ -56,27 +55,32 @@ TPM2_NV_ChangeAuth_Unmarshal(
 )
 {
     TPM_RC result = TPM_RC_SUCCESS;
-//    NV_ChangeAuth_In *in = (NV_ChangeAuth_In *)parms->parmIn;
-//    NV_ChangeAuth_Out *out = (NV_ChangeAuth_Out *)parms->parmOut;
 
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
         (parms->objectCntIn < TPM2_NV_ChangeAuth_HdlCntIn) ||
-//        (parms->objectCntOut < TPM2_NV_ChangeAuth_HdlCntOut) ||
         (parms->parmIn == NULL) ||
         (parms->parmOut == NULL))
     {
         return TPM_RC_FAILURE;
     }
-    if((result = Command_Unmarshal(
+
+    TPM2B_AUTH oldAuth = { 0 };
+    NV_ChangeAuth_In *in = (NV_ChangeAuth_In *)parms->parmIn;
+
+    oldAuth = parms->objectTableIn[TPM2_NV_ChangeAuth_HdlIn_NvIndex].entity.authValue;
+    parms->objectTableIn[TPM2_NV_ChangeAuth_HdlIn_NvIndex].entity.authValue = in->newAuth;
+    if ((result = Command_Unmarshal(
         TPM_CC_NV_ChangeAuth,
         sessionTable,
         sessionCnt,
         TPM2_NV_ChangeAuth_Parameter_Unmarshal,
         parms,
         buffer,
-        size)) == TPM_RC_SUCCESS)
+        size)) != TPM_RC_SUCCESS)
     {
+        parms->objectTableIn[TPM2_NV_ChangeAuth_HdlIn_NvIndex].entity.authValue = oldAuth;
     }
+    MemorySet(oldAuth.t.buffer, 0x00, sizeof(oldAuth.t.buffer));
     return result;
 }
 
@@ -88,12 +92,11 @@ TPM2_NV_ChangeAuth_Parameter_Marshal(
 )
 {
     NV_ChangeAuth_In *in = (NV_ChangeAuth_In *)parms->parmIn;
-//    NV_ChangeAuth_Out *out = (NV_ChangeAuth_Out *)parms->parmOut;
     UINT16 parameterSize = 0;
 
     // Create the parameter buffer
     parameterSize += TPM2B_AUTH_Marshal(&in->newAuth, buffer, size);
-    if(*size < 0) return TPM_RC_SIZE;
+    if (*size < 0) return TPM_RC_SIZE;
 
     return parameterSize;
 }
@@ -105,8 +108,6 @@ TPM2_NV_ChangeAuth_Parameter_Unmarshal(
     INT32 *size
 )
 {
-//    NV_ChangeAuth_In *in = (NV_ChangeAuth_In *)parms->parmIn;
-//    NV_ChangeAuth_Out *out = (NV_ChangeAuth_Out *)parms->parmOut;
     TPM_RC result = TPM_RC_SUCCESS;
 
     // Unmarshal the parameters

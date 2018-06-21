@@ -45,12 +45,14 @@ typedef void                     *PVOID;
 #undef FALSE
 #endif
 
+#ifndef NOMINMAX
 #ifndef max
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 #endif
 
 typedef int BOOL;
@@ -157,8 +159,13 @@ typedef struct {
 #define    ALG_XOR               YES    // 1
 #define    ALG_KEYEDHASH         YES    // 1
 #define    ALG_SHA256            YES    // 1
+#ifndef MAXALG_SHA256
+#define    ALG_SHA384            YES    // 1
+#define    ALG_SHA512            YES    // 1
+#else
 #define    ALG_SHA384            NO    // 0
 #define    ALG_SHA512            NO    // 0
+#endif
 #define    ALG_SM3_256           NO    // 0
 #define    ALG_SM4               NO    // 0
 #define    ALG_RSASSA            YES    // 1
@@ -828,6 +835,7 @@ typedef UINT32 TPM_RC;
 #define    TPM_RCS_CURVE               (TPM_RCS)(RC_FMT1 + 0x026)
 #define    TPM_RC_ECC_POINT            (TPM_RC)(RC_FMT1 + 0x027)    
 #define    TPM_RCS_ECC_POINT           (TPM_RCS)(RC_FMT1 + 0x027)
+#define    TPM_RC_MAX_FM1              (TPM_RC)(RC_FMT1 + 0x03F)    
 #define    RC_WARN                     (TPM_RC)(0x900)    
 #define    TPM_RC_CONTEXT_GAP          (TPM_RC)(RC_WARN + 0x001)    
 #define    TPM_RC_OBJECT_MEMORY        (TPM_RC)(RC_WARN + 0x002)    
@@ -877,8 +885,34 @@ typedef UINT32 TPM_RC;
 #define    TPM_RC_E                    (TPM_RC)(0xE00)    
 #define    TPM_RC_F                    (TPM_RC)(0xF00)    
 #define    TPM_RC_N_MASK               (TPM_RC)(0xF00)    
+#define    TPM_RC_VENDOR               (TPM_RC)(0x400)
+#define    TPM_RC_MAX                  (TPM_RC)(0xFFF)
 
+#ifndef FORCEINLINE
+#if (_MSC_VER >= 1200)
+#define FORCEINLINE __forceinline
+#else
+#define FORCEINLINE __inline
+#endif
+#endif
+#ifndef FACILITY_TPM_SOFTWARE
+#define FACILITY_TPM_SOFTWARE 41
+#endif
+#ifndef _HRESULT_DEFINED
+#define _HRESULT_DEFINED
+#ifdef __midl
+typedef LONG HRESULT;
+#else
+typedef _Return_type_success_(return >= 0) long HRESULT;
+#endif // __midl
+#endif // !_HRESULT_DEFINED
 
+#if defined(__cplusplus) && _MSC_VER >= 1900 && !defined(SORTPP_PASS)
+constexpr
+#endif
+FORCEINLINE HRESULT HRESULT_FROM_TPM(UINT32 x) {
+    return (HRESULT)(x) <= 0 ? (HRESULT)(x) : (HRESULT)(((x) & 0x0000FFFF) | (FACILITY_TPM_SOFTWARE << 16) | 0x80000000);
+}
 
 
 // Table 16 -- TPM_CLOCK_ADJUST Constants <I>
@@ -8741,7 +8775,7 @@ BYTE **buffer,
 INT32 *size
 );
 
-#endif _GETCAPABILITY_H
+#endif //_GETCAPABILITY_H
 
 #ifndef _GETCOMMANDAUDITDIGEST_H
 #define _GETCOMMANDAUDITDIGEST_H
@@ -11018,7 +11052,7 @@ TPM2B_DIGEST *policyDigest,
 PolicyDuplicationSelect_In *policyCommandCodeIn
 );
 
-#endif _POLICYDUPLICATIONSELECT_H
+#endif //_POLICYDUPLICATIONSELECT_H
 
 #ifndef _POLICYGETDIGEST_H
 #define _POLICYGETDIGEST_H
@@ -11353,7 +11387,7 @@ TPM2B_DIGEST *policyDigest,
 PolicyPassword_In *policyPassword_In
 );
 
-#endif _POLICYPASSWORD_H
+#endif //_POLICYPASSWORD_H
 
 #ifndef _POLICYPCR_H
 #define _POLICYPCR_H
@@ -11691,7 +11725,7 @@ PolicySigned_In *policySigned_In,
 TPM2B_NAME *authObjectName
 );
 
-#endif _POLICYSIGNED_H
+#endif //_POLICYSIGNED_H
 
 #ifndef _POLICYTICKET_H
 #define _POLICYTICKET_H
@@ -12111,7 +12145,7 @@ BYTE **buffer,
 INT32 *size
 );
 
-#endif _RSA_ENCRYPT_H
+#endif //_RSA_ENCRYPT_H
 
 #ifndef _SELFTEST_H
 #define _SELFTEST_H
@@ -12310,7 +12344,7 @@ BYTE **buffer,
 INT32 *size
 );
 
-#endif _SETALGORITHMSET_H
+#endif //_SETALGORITHMSET_H
 
 #ifndef _SETCOMMANDCODEAUDITSTATUS_H
 #define _SETCOMMANDCODEAUDITSTATUS_H
@@ -12898,6 +12932,7 @@ INT32 *size
 	INT32 size = sizeof(pbCmd); \
 	Marshal_Parms parms = { 0 }; \
 	SESSION sessionTable[MAX_HANDLE_NUM] = { 0 }; \
+    for (UINT32 n = 0; n < MAX_HANDLE_NUM; n++) sessionTable[n].handle = TPM_RS_PW; \
 	UINT32 sessionCnt = 0; \
 
 #define INITIALIZE_CALL_BUFFERS(__CommandType, __InParm, __OutParm) \
@@ -12926,27 +12961,19 @@ INT32 *size
 	} \
 
 #define TRY_TPM_CALL(__CloseContext, __CommandType) \
-	cbCmd = ##__CommandType##_Marshal(sessionTable, sessionCnt, &parms, &buffer, &size); \
+if ((cbCmd = ##__CommandType##_Marshal(sessionTable, sessionCnt, &parms, &buffer, &size)) == 0) \
+{ \
+    result = TPM_RC_FAILURE; \
+} \
+else \
+{ \
 	if ((result = PlatformSubmitTPM20Command(__CloseContext, pbCmd, cbCmd, pbRsp, sizeof(pbRsp), &cbRsp)) == TPM_RC_SUCCESS) \
 	{ \
 		buffer = pbRsp; \
 		size = cbRsp; \
 		result = ##__CommandType##_Unmarshal(sessionTable, sessionCnt, &parms, &buffer, &size); \
 	} \
-
-// Windows defined constants
-#define TPM_20_SRK_HANDLE 0x81000001
-#define TPM_20_TCG_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x00 << 22)
-#define TPM_20_OWNER_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x01 << 22))
-#define TPM_20_PLATFORM_MANUFACTURER_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x02 << 22))
-#define TPM_20_TPM_MANUFACTURER_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x03 << 22))
-#define TPM_20_NV_INDEX_EK_CERTIFICATE (TPM_20_PLATFORM_MANUFACTURER_NV_SPACE + 2)
-#define TPM_20_NV_INDEX_EK_NONCE (TPM_20_PLATFORM_MANUFACTURER_NV_SPACE + 3)
-#define TPM_20_NV_INDEX_EK_TEMPLATE (TPM_20_PLATFORM_MANUFACTURER_NV_SPACE + 4)
-
-void SetEkTemplate(
-TPM2B_PUBLIC *publicArea         // OUT: public area of EK object
-);
+} \
 
 void
 ComputeCpHash(
@@ -12959,7 +12986,7 @@ TPM2B_DIGEST    *cpHash,            // OUT: cpHash
 TPM2B_DIGEST    *nameHash           // OUT: name hash of command
 );
 
-TPM_RC
+void
 ObjectComputeName(
 TPMT_PUBLIC *publicArea,        // IN: public area of an object
 TPM2B_NAME *name                // OUT: name of the object
@@ -12971,6 +12998,20 @@ ANY_OBJECT              *parent,            // IN/OUT: indication of the seed so
 TPMT_PUBLIC             *publicArea,        // IN/OUT: public area
 TPMS_SENSITIVE_CREATE   *sensitiveCreate,   // IN: sensitive creation
 TPMT_SENSITIVE          *sensitive          // OUT: sensitive area
+);
+
+UINT16
+EntityGetName(
+ANY_OBJECT *object,
+TPM2B_NAME *name        // OUT: name of entity
+);
+
+UINT16
+EntityGetQualifiedName(
+TPMI_ALG_HASH hashAlg,
+ANY_OBJECT              *parent,            // IN/OUT: indication of the seed source
+ANY_OBJECT *object,
+TPM2B_NAME *name        // OUT: qualified name of entity
 );
 
 void
@@ -13015,4 +13056,28 @@ TPM2B_NONCE         *ref,               // IN: the reference data
 TPM2B_DIGEST        *policyDigest       // IN/OUT: policy digest to be updated
 );
 
+// Windows defined constants
+#define TPM_20_SRK_HANDLE 0x81000001
+#define TPM_20_EK_HANDLE 0x81010001
+#define TPM_20_TCG_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x00 << 22)
+#define TPM_20_OWNER_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x01 << 22))
+#define TPM_20_PLATFORM_MANUFACTURER_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x02 << 22))
+#define TPM_20_TPM_MANUFACTURER_NV_SPACE ((TPM_HT_NV_INDEX << 24) | (0x03 << 22))
+#define TPM_20_NV_INDEX_EK_CERTIFICATE (TPM_20_PLATFORM_MANUFACTURER_NV_SPACE + 2)
+#define TPM_20_NV_INDEX_EK_NONCE (TPM_20_PLATFORM_MANUFACTURER_NV_SPACE + 3)
+#define TPM_20_NV_INDEX_EK_TEMPLATE (TPM_20_PLATFORM_MANUFACTURER_NV_SPACE + 4)
+
+extern UINT32 g_CommandTimeout;
+#define TPM_DEFAULT_COMMAND_TIMEOUT (2000) // 2 seconds should be OK for all non-create commands
+#define TPM_CREATE_COMMAND_TIMEOUT (90000) // 90 seconds should cover all create commands
+void SetEkTemplate(
+TPM2B_PUBLIC *publicArea         // OUT: public area of EK object
+);
+void SetSrkTemplate(
+TPM2B_PUBLIC *publicArea         // OUT: public area of SRK object
+);
+
+#ifdef URCHIN_DEBUG
+extern uint8_t EnableUrchinDebugSpew;
+#endif
 #endif // __URCHIN_H__

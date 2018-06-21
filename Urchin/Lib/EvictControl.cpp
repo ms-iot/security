@@ -28,9 +28,8 @@ TPM2_EvictControl_Marshal(
     INT32 *size
 )
 {
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
        (parms->objectCntIn < TPM2_EvictControl_HdlCntIn) ||
-//       (parms->objectCntOut < TPM2_EvictControl_HdlCntOut) ||
        (parms->parmIn == NULL) ||
        (parms->parmOut == NULL))
     {
@@ -56,18 +55,19 @@ TPM2_EvictControl_Unmarshal(
 )
 {
     TPM_RC result = TPM_RC_SUCCESS;
-//    EvictControl_In *in = (EvictControl_In *)parms->parmIn;
-//    EvictControl_Out *out = (EvictControl_Out *)parms->parmOut;
 
-    if((parms == NULL) ||
-       (parms->objectCntIn < TPM2_EvictControl_HdlCntIn) ||
-//       (parms->objectCntOut < TPM2_EvictControl_HdlCntOut) ||
-       (parms->parmIn == NULL) ||
-       (parms->parmOut == NULL))
+    if ((parms == NULL) ||
+        (parms->objectCntIn < TPM2_EvictControl_HdlCntIn) ||
+        (parms->objectCntOut < TPM2_EvictControl_HdlCntOut) ||
+        (parms->parmIn == NULL) ||
+        (parms->parmOut == NULL))
     {
         return TPM_RC_FAILURE;
     }
-    if((result = Command_Unmarshal(
+
+    EvictControl_In *in = (EvictControl_In *)parms->parmIn;
+
+    if ((result = Command_Unmarshal(
         TPM_CC_EvictControl,
         sessionTable,
         sessionCnt,
@@ -76,6 +76,7 @@ TPM2_EvictControl_Unmarshal(
         buffer,
         size)) == TPM_RC_SUCCESS)
     {
+        parms->objectTableIn[TPM2_EvictControl_HdlIn_ObjectHandle].obj.handle = in->persistentHandle;
     }
     return result;
 }
@@ -88,7 +89,6 @@ TPM2_EvictControl_Parameter_Marshal(
 )
 {
     EvictControl_In *in = (EvictControl_In *)parms->parmIn;
-    //    EvictControl_Out *out = (EvictControl_Out *)parms->parmOut;
     UINT16 parameterSize = 0;
 
     // Create the parameter buffer
@@ -105,8 +105,6 @@ TPM2_EvictControl_Parameter_Unmarshal(
     INT32 *size
 )
 {
-//    EvictControl_In *in = (EvictControl_In *)parms->parmIn;
-//    EvictControl_Out *out = (EvictControl_Out *)parms->parmOut;
     TPM_RC result = TPM_RC_SUCCESS;
 
     // Unmarshal the parameters

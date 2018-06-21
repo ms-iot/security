@@ -19,6 +19,11 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include    "stdafx.h"
 
+#ifdef ArraySize
+#undef ArraySize
+#endif // ArraySize
+#define ArraySize(X)    ((int)(sizeof(X)/sizeof(X[0])))
+
 // Table 3 -- BaseTypes BaseTypes <I/O>
 TPM_RC 
 UINT8_Unmarshal(UINT8 *target, BYTE **buffer, INT32 *size)
@@ -2132,6 +2137,8 @@ TPMS_TAGGED_PCR_SELECT_Unmarshal(TPMS_TAGGED_PCR_SELECT *target, BYTE **buffer, 
     result = UINT8_Unmarshal((UINT8 *)&(target->sizeofSelect), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
+    if((target->sizeofSelect) > PCR_SELECT_MAX)
+        return TPM_RC_SIZE;
     result = BYTE_Array_Unmarshal((BYTE *)(target->pcrSelect), buffer, size, (INT32)(target->sizeofSelect));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2148,8 +2155,8 @@ TPML_CC_Unmarshal(TPML_CC *target, BYTE **buffer, INT32 *size)
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > MAX_CAP_CC)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_CAP_CC)
+        return TPM_RC_SIZE;
     result = TPM_CC_Array_Unmarshal((TPM_CC *)(target->commandCodes), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2186,6 +2193,8 @@ TPML_CCA_Unmarshal(TPML_CCA *target, BYTE **buffer, INT32 *size)
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
+    if((target->count) > MAX_CAP_CC)
+        return TPM_RC_SIZE;
     result = TPMA_CC_Array_Unmarshal((TPMA_CC *)(target->commandAttributes), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2202,8 +2211,8 @@ TPML_ALG_Unmarshal(TPML_ALG *target, BYTE **buffer, INT32 *size)
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > MAX_ALG_LIST_SIZE)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_ALG_LIST_SIZE)
+        return TPM_RC_SIZE;
     result = TPM_ALG_ID_Array_Unmarshal((TPM_ALG_ID *)(target->algorithms), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2240,8 +2249,8 @@ TPML_HANDLE_Unmarshal(TPML_HANDLE *target, BYTE **buffer, INT32 *size)
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > MAX_ALG_LIST_SIZE)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_CAP_HANDLES)
+        return TPM_RC_SIZE;
     result = TPM_HANDLE_Array_Unmarshal((TPM_HANDLE *)(target->handle), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2260,8 +2269,8 @@ TPML_DIGEST_Unmarshal(TPML_DIGEST *target, BYTE **buffer, INT32 *size)
         return result;
 //    if( (target->count < 2))
 //        return TPM_RC_SIZE;
-//    if((target->count) > 8)
-//        return TPM_RC_SIZE;
+    if((target->count) > (ArraySize(target->digests)))
+        return TPM_RC_SIZE;
     result = TPM2B_DIGEST_Array_Unmarshal((TPM2B_DIGEST *)(target->digests), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2288,8 +2297,8 @@ TPML_DIGEST_VALUES_Unmarshal(TPML_DIGEST_VALUES *target, BYTE **buffer, INT32 *s
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > HASH_COUNT)
-//        return TPM_RC_SIZE;
+    if((target->count) > HASH_COUNT)
+        return TPM_RC_SIZE;
     result = TPMT_HA_Array_Unmarshal((TPMT_HA *)(target->digests), buffer, size, FALSE, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2318,8 +2327,8 @@ TPM2B_DIGEST_VALUES_Unmarshal(TPM2B_DIGEST_VALUES *target, BYTE **buffer, INT32 
         return result;
     // if size equal to 0, the rest of the structure is a zero buffer.  Stop processing
     if(target->t.size == 0) return TPM_RC_SUCCESS;
-//    if((target->t.size) > sizeof(TPML_DIGEST_VALUES))
-//        return TPM_RC_SIZE;
+    if((target->t.size) > sizeof(TPML_DIGEST_VALUES))
+        return TPM_RC_SIZE;
     result = BYTE_Array_Unmarshal((BYTE *)(target->t.buffer), buffer, size, (INT32)(target->t.size));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2348,8 +2357,8 @@ TPML_PCR_SELECTION_Unmarshal(TPML_PCR_SELECTION *target, BYTE **buffer, INT32 *s
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > HASH_COUNT)
-//        return TPM_RC_SIZE;
+    if((target->count) > HASH_COUNT)
+        return TPM_RC_SIZE;
     result = TPMS_PCR_SELECTION_Array_Unmarshal((TPMS_PCR_SELECTION *)(target->pcrSelections), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2386,8 +2395,8 @@ TPML_ALG_PROPERTY_Unmarshal(TPML_ALG_PROPERTY *target, BYTE **buffer, INT32 *siz
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > HASH_COUNT)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_CAP_ALGS)
+        return TPM_RC_SIZE;
     result = TPMS_ALG_PROPERTY_Array_Unmarshal((TPMS_ALG_PROPERTY *)(target->algProperties), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2414,8 +2423,8 @@ TPML_TAGGED_TPM_PROPERTY_Unmarshal(TPML_TAGGED_TPM_PROPERTY *target, BYTE **buff
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > HASH_COUNT)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_TPM_PROPERTIES)
+        return TPM_RC_SIZE;
     result = TPMS_TAGGED_PROPERTY_Array_Unmarshal((TPMS_TAGGED_PROPERTY *)(target->tpmProperty), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2442,8 +2451,8 @@ TPML_TAGGED_PCR_PROPERTY_Unmarshal(TPML_TAGGED_PCR_PROPERTY *target, BYTE **buff
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > HASH_COUNT)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_PCR_PROPERTIES)
+        return TPM_RC_SIZE;
     result = TPMS_TAGGED_PCR_SELECT_Array_Unmarshal((TPMS_TAGGED_PCR_SELECT *)(target->pcrProperty), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;
@@ -2473,8 +2482,8 @@ TPML_ECC_CURVE_Unmarshal(TPML_ECC_CURVE *target, BYTE **buffer, INT32 *size)
     result = UINT32_Unmarshal((UINT32 *)&(target->count), buffer, size);
     if(result != TPM_RC_SUCCESS)
         return result;
-//    if((target->count) > HASH_COUNT)
-//        return TPM_RC_SIZE;
+    if((target->count) > MAX_ECC_CURVES)
+        return TPM_RC_SIZE;
     result = TPM_ECC_CURVE_Array_Unmarshal((TPM_ECC_CURVE *)(target->eccCurves), buffer, size, (INT32)(target->count));
     if(result != TPM_RC_SUCCESS)
         return result;

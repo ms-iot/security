@@ -28,9 +28,8 @@ TPM2_ObjectChangeAuth_Marshal(
     INT32 *size
 )
 {
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
         (parms->objectCntIn < TPM2_ObjectChangeAuth_HdlCntIn) ||
-//        (parms->objectCntOut < TPM2_ObjectChangeAuth_HdlCntOut) ||
         (parms->parmIn == NULL) ||
         (parms->parmOut == NULL))
     {
@@ -56,18 +55,22 @@ TPM2_ObjectChangeAuth_Unmarshal(
 )
 {
     TPM_RC result = TPM_RC_SUCCESS;
-//    ObjectChangeAuth_In *in = (ObjectChangeAuth_In *)parms->parmIn;
-    ObjectChangeAuth_Out *out = (ObjectChangeAuth_Out *)parms->parmOut;
 
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
         (parms->objectCntIn < TPM2_ObjectChangeAuth_HdlCntIn) ||
-//        (parms->objectCntOut < TPM2_ObjectChangeAuth_HdlCntOut) ||
         (parms->parmIn == NULL) ||
         (parms->parmOut == NULL))
     {
         return TPM_RC_FAILURE;
     }
-    if((result = Command_Unmarshal(
+
+    TPM2B_AUTH oldAuth = { 0 };
+    ObjectChangeAuth_In *in = (ObjectChangeAuth_In *)parms->parmIn;
+    ObjectChangeAuth_Out *out = (ObjectChangeAuth_Out *)parms->parmOut;
+
+    oldAuth = parms->objectTableIn[TPM2_ObjectChangeAuth_HdlIn_ObjectHandle].entity.authValue;
+    parms->objectTableIn[TPM2_ObjectChangeAuth_HdlIn_ObjectHandle].entity.authValue = in->newAuth;
+    if ((result = Command_Unmarshal(
         TPM_CC_ObjectChangeAuth,
         sessionTable,
         sessionCnt,
@@ -78,6 +81,11 @@ TPM2_ObjectChangeAuth_Unmarshal(
     {
         parms->objectTableOut[TPM2_ObjectChangeAuth_HdlIn_ObjectHandle].obj.privateArea = out->outPrivate;
     }
+    else
+    {
+        parms->objectTableIn[TPM2_ObjectChangeAuth_HdlIn_ObjectHandle].entity.authValue = oldAuth;
+    }
+    MemorySet(oldAuth.t.buffer, 0x00, sizeof(oldAuth.t.buffer));
     return result;
 }
 
@@ -89,12 +97,11 @@ TPM2_ObjectChangeAuth_Parameter_Marshal(
 )
 {
     ObjectChangeAuth_In *in = (ObjectChangeAuth_In *)parms->parmIn;
-//    ObjectChangeAuth_Out *out = (ObjectChangeAuth_Out *)parms->parmOut;
     UINT16 parameterSize = 0;
 
     // Create the parameter buffer
     parameterSize += TPM2B_AUTH_Marshal(&in->newAuth, buffer, size);
-    if(*size < 0) return TPM_RC_SIZE;
+    if (*size < 0) return TPM_RC_SIZE;
 
     return parameterSize;
 }
@@ -106,13 +113,12 @@ TPM2_ObjectChangeAuth_Parameter_Unmarshal(
     INT32 *size
 )
 {
-//    ObjectChangeAuth_In *in = (ObjectChangeAuth_In *)parms->parmIn;
     ObjectChangeAuth_Out *out = (ObjectChangeAuth_Out *)parms->parmOut;
     TPM_RC result = TPM_RC_SUCCESS;
 
     // Unmarshal the parameters
     result = TPM2B_PRIVATE_Unmarshal(&out->outPrivate, buffer, size);
-    if(result != TPM_RC_SUCCESS) return result;
+    if (result != TPM_RC_SUCCESS) return result;
 
     return result;
 }

@@ -30,6 +30,35 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #define UNDEFINED_INDEX (-1)
 
+#ifdef URCHIN_DEBUG
+#include <stdio.h>
+uint8_t EnableUrchinDebugSpew = 0;
+static void
+UrchinPrintBuffer(char* label, uint8_t* dataPtr, uint32_t dataSize)
+{
+    if (!EnableUrchinDebugSpew) return;
+    printf("uint8_t %s[%u] = {\r\n", label, (unsigned int)dataSize);
+    for (uint32_t n = 0; n < dataSize; n++)
+    {
+        if (n > 0)
+        {
+            if ((n % 16) == 0)
+            {
+                printf(",\r\n");
+            }
+            else
+            {
+                printf(", ");
+            }
+        }
+        printf("0x%02x", dataPtr[n]);
+    }
+    printf("\r\n};\r\n");
+}
+#else
+#define UrchinPrintBuffer(a, b, c)
+#endif
+
 //*** PolicyUpdate()
 // Update policy hash
 //      Update the policyDigest in policy session by extending policyRef and
@@ -912,9 +941,32 @@ void SetEkTemplate(
     publicArea->t.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM_ALG_CFB;
 };
 
+void SetSrkTemplate(
+    TPM2B_PUBLIC *publicArea
+    )
+{
+    if (publicArea == NULL) return;
+    publicArea->t.publicArea.type = TPM_ALG_RSA;
+    publicArea->t.publicArea.nameAlg = TPM_ALG_SHA256;
+    publicArea->t.publicArea.objectAttributes.fixedTPM = SET;
+    publicArea->t.publicArea.objectAttributes.fixedParent = SET;
+    publicArea->t.publicArea.objectAttributes.sensitiveDataOrigin = SET;
+    publicArea->t.publicArea.objectAttributes.userWithAuth = SET;
+    publicArea->t.publicArea.objectAttributes.noDA = SET;
+    publicArea->t.publicArea.objectAttributes.restricted = SET;
+    publicArea->t.publicArea.objectAttributes.decrypt = SET;
+    publicArea->t.publicArea.parameters.rsaDetail.keyBits = MAX_RSA_KEY_BITS;
+    publicArea->t.publicArea.parameters.rsaDetail.exponent = 0;
+    publicArea->t.publicArea.parameters.rsaDetail.scheme.scheme = TPM_ALG_NULL;
+    publicArea->t.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM_ALG_AES;
+    publicArea->t.publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
+    publicArea->t.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM_ALG_CFB;
+    publicArea->t.publicArea.unique.rsa.t.size = MAX_RSA_KEY_BITS / 8;
+};
+
 //*** ObjectComputeName()
 // This function computes the Name of an object from its public area.
-TPM_RC
+void
 ObjectComputeName(
     TPMT_PUBLIC         *publicArea,        // IN: public area of an object
     TPM2B_NAME          *name               // OUT: name of the object
@@ -928,16 +980,10 @@ ObjectComputeName(
     if(publicArea->nameAlg == TPM_ALG_NULL)
     {
         name->t.size = 0;
-        return TPM_RC_SUCCESS;
+        return;
     }
-
     // Start hash stack
     name->t.size = CryptStartHash(publicArea->nameAlg, &hashState);
-    if (name->t.size == 0)
-    {
-        // Only TPM_ALG_NULL should ever be 0
-        return TPM_RC_FAILURE;
-    }
 
     // Marshal the public area into its canonical form
     buffer = marshalBuffer.b.buffer;
@@ -953,7 +999,7 @@ ObjectComputeName(
     // set the nameAlg
     UINT16_TO_BYTE_ARRAY(publicArea->nameAlg, name->t.name);
     name->t.size += 2;
-    return TPM_RC_SUCCESS;
+    return;
 }
 
 //*** HandleGetType()
@@ -1206,6 +1252,44 @@ TPM2B_NAME *name        // OUT: name of entity
         name->t.size = TPM_HANDLE_Marshal(&object->generic.handle, &buffer, &size);
         break;
     }
+    return name->t.size;
+}
+
+UINT16
+EntityGetQualifiedName(
+TPMI_ALG_HASH hashAlg,
+ANY_OBJECT *parent,
+ANY_OBJECT *object,
+TPM2B_NAME *name        // OUT: qualified name of entity
+)
+{
+    TPM2B_NAME parentName = {0};
+    HASH_STATE hashState;
+
+    switch (HandleGetType(parent->generic.handle))
+    {
+    case TPM_RH_UNASSIGNED:
+        *name = object->generic.name;
+        return name->t.size;
+    case TPM_HT_TRANSIENT:
+    case TPM_HT_NV_INDEX:
+    case TPM_HT_PERSISTENT:
+        // Name for a key or NV index
+        parentName = parent->generic.name;
+        break;
+    default:
+        // For all other types, the handle is the Name
+        BYTE *buffer = parentName.t.name;
+        INT32 size = sizeof(parentName.t.name);
+        parentName.t.size = TPM_HANDLE_Marshal(&parent->generic.handle, &buffer, &size);
+        break;
+    }
+
+    UINT16_TO_BYTE_ARRAY(hashAlg, name->t.name);
+    name->t.size = CryptStartHash(hashAlg, &hashState) + sizeof(TPMI_ALG_HASH);
+    CryptUpdateDigest2B(&hashState, &parentName.b);
+    CryptUpdateDigest2B(&hashState, &object->generic.name.b);
+    name->t.size = CryptCompleteHash(&hashState, sizeof(name->t.name) - sizeof(TPMI_ALG_HASH), &name->t.name[sizeof(TPMI_ALG_HASH)]) + sizeof(TPMI_ALG_HASH);
     return name->t.size;
 }
 
@@ -1916,11 +2000,16 @@ Command_Marshal(
             TPM2B_AUTH extraKey = {0};
 
             if((i < parms->objectCntIn) // Session associated to object
-                && (IsAuthValueAvailable(&parms->objectTableIn[i], command_code)))
+#ifndef TPMERRATA212 // This is a nasty spec change that will have to be dealt with in a dynamic form
+                && (IsAuthValueAvailable(&parms->objectTableIn[i], command_code))
+#endif
+                )
             {
                 MemoryCopy2B((TPM2B*)&extraKey, (TPM2B*)&parms->objectTableIn[i].obj.authValue, sizeof(extraKey.t.buffer));
                 MemoryRemoveTrailingZeros(&extraKey);
             }
+
+            UrchinPrintBuffer("DecParm", (uint8_t*)requestParameterBuffer, (requestParameterBuffer[0] << 8) + requestParameterBuffer[1]);
 
             // Encrypt the first parameter
             CryptParameterEncryption(&sessionTable[i],
@@ -1960,6 +2049,7 @@ Command_Marshal(
         }
         pAssert((size == NULL) || (*size >= 0));
     }
+    UrchinPrintBuffer("TPMCMD", *buffer - (headerSize + sessionSize + parameterSize), (headerSize + sessionSize + parameterSize));
     return (UINT16)(headerSize + sessionSize + parameterSize);
 }
 
@@ -1988,6 +2078,8 @@ Command_Unmarshal(
     UINT32 headerSize = sizeof(TPMI_ST_COMMAND_TAG)+sizeof(UINT32)+sizeof(TPM_RC);
     UINT32 sessionSize = 0;
     UINT32 parameterSize = 0;
+
+    UrchinPrintBuffer("TPMRSP", *buffer, *size);
 
     // Are session allowed?
     if ((!IsSessionAllowed(command_code)) && (sessionCnt != 0)) return TPM_RC_FAILURE;
@@ -2034,6 +2126,7 @@ Command_Unmarshal(
         result = UINT32_Unmarshal(&parameterSize, buffer, size);
         if (result != TPM_RC_SUCCESS) return result;
         parameterRemaining = (INT32)parameterSize;
+        if(parameterRemaining < 0) return TPM_RC_SIZE;
         if ((INT32)parameterSize > *size) return TPM_RC_SIZE;
         parameterPtr = *buffer;
         *size -= parameterSize;
@@ -2063,7 +2156,10 @@ Command_Unmarshal(
                 TPM2B_AUTH extraKey = {0};
 
                 if((i < parms->objectCntIn) // Session associated to object
-                    && (IsAuthValueAvailable(&parms->objectTableIn[i], command_code)))
+#ifndef TPMERRATA212 // This is a nasty spec change that will have to be dealt with in a dynamic form
+                    && (IsAuthValueAvailable(&parms->objectTableIn[i], command_code))
+#endif
+                    )
                 {
                     MemoryCopy2B((TPM2B*)&extraKey, (TPM2B*)&parms->objectTableIn[i].obj.authValue, sizeof(extraKey.t.buffer));
                     MemoryRemoveTrailingZeros(&extraKey);
@@ -2076,6 +2172,8 @@ Command_Unmarshal(
                                          (UINT16)EncryptSize(command_code),
                                          &extraKey,
                                          parameterPtr);
+
+                UrchinPrintBuffer("EncParm", parameterPtr, (parameterPtr[0] << 8) + parameterPtr[1]);
 
                 // Only one encryption session is defined - we are done after the first one
                 break;

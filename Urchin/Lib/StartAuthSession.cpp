@@ -29,10 +29,8 @@ TPM2_StartAuthSession_Marshal(
     INT32 *size
 )
 {
-    StartAuthSession_In *in = (StartAuthSession_In *)parms->parmIn;
-//    StartAuthSession_Out *out = (StartAuthSession_Out *)parms->parmOut;
     TPM_RC result = TPM_RC_SUCCESS;
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
         (parms->objectCntIn < TPM2_StartAuthSession_HdlCntIn) ||
         (parms->objectCntOut < TPM2_StartAuthSession_HdlCntOut) ||
         (parms->parmIn == NULL) ||
@@ -40,8 +38,11 @@ TPM2_StartAuthSession_Marshal(
     {
         return TPM_RC_FAILURE;
     }
+
+    StartAuthSession_In *in = (StartAuthSession_In *)parms->parmIn;
+
     // Encrypt the salt for salted sessions
-    if(parms->objectTableIn[0].generic.handle != TPM_RH_NULL)
+    if ((parms->objectTableIn[0].generic.handle != TPM_RH_NULL) && (in->encryptedSalt.t.size == 0))
     {
         OBJECT key = {0};
         key.publicArea = parms->objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey].obj.publicArea.t.publicArea;
@@ -71,7 +72,7 @@ TPM2_StartAuthSession_Unmarshal(
     StartAuthSession_In *in = (StartAuthSession_In *)parms->parmIn;
     StartAuthSession_Out *out = (StartAuthSession_Out *)parms->parmOut;
     TPM2B_KEY key = {0};
-    if((parms == NULL) ||
+    if ((parms == NULL) ||
         (parms->objectCntIn < TPM2_StartAuthSession_HdlCntIn) ||
         (parms->objectCntOut < TPM2_StartAuthSession_HdlCntOut) ||
         (parms->parmIn == NULL) ||
@@ -79,7 +80,7 @@ TPM2_StartAuthSession_Unmarshal(
     {
         return TPM_RC_FAILURE;
     }
-    if((result = Command_Unmarshal(
+    if ((result = Command_Unmarshal(
         TPM_CC_StartAuthSession,
         sessionTable,
         sessionCnt,
@@ -132,7 +133,7 @@ TPM2_StartAuthSession_Unmarshal(
         }
 
         // Extra stuff for bound and or salted sessions
-        if(parms->objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle != TPM_RH_NULL) // Bound session
+        if (parms->objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle != TPM_RH_NULL) // Bound session
         {
             // Remember whom we are bound to
             parms->objectTableOut[TPM2_StartAuthSession_HdlOut_SessionHandle].session.u1.boundEntity = parms->objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.name;
@@ -142,13 +143,13 @@ TPM2_StartAuthSession_Unmarshal(
             MemoryConcat2B(&key.b, &parms->objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.authValue.b, sizeof(key.t.buffer));
             MemoryRemoveTrailingZeros((TPM2B_AUTH*)&key.b);
         }
-        if(parms->objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey].obj.handle != TPM_RH_NULL) // Salted session
+        if (parms->objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey].obj.handle != TPM_RH_NULL) // Salted session
         {
             // Add salt to key
             pAssert(key.t.size + in->salt.t.size <= sizeof(key.t.buffer));
             MemoryConcat2B(&key.b, &in->salt.b, sizeof(key.t.buffer));
         }
-        if((parms->objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle != TPM_RH_NULL) ||
+        if ((parms->objectTableIn[TPM2_StartAuthSession_HdlIn_Bind].obj.handle != TPM_RH_NULL) ||
             (parms->objectTableIn[TPM2_StartAuthSession_HdlIn_TpmKey].obj.handle != TPM_RH_NULL))
         {
             UINT16 hashSize;
@@ -179,7 +180,6 @@ TPM2_StartAuthSession_Parameter_Marshal(
 )
 {
     StartAuthSession_In *in = (StartAuthSession_In *)parms->parmIn;
-//    StartAuthSession_Out *out = (StartAuthSession_Out *)parms->parmOut;
     UINT16 parameterSize = 0;
 
     // Marshal the parameters
@@ -203,7 +203,6 @@ TPM2_StartAuthSession_Parameter_Unmarshal(
     INT32 *size
 )
 {
-//    StartAuthSession_In *in = (StartAuthSession_In *)parms->parmIn;
     StartAuthSession_Out *out = (StartAuthSession_Out *)parms->parmOut;
     TPM_RC result = TPM_RC_SUCCESS;
 
