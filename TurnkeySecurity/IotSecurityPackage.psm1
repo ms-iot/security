@@ -1,12 +1,12 @@
-﻿Import-Module $PSScriptRoot\IoTDeviceGuardSecureBoot.psm1 -Force
-Import-Module $PSScriptRoot\IoTDeviceGuardBitLocker.psm1 -Force
-Import-Module $PSScriptRoot\IoTDeviceGuardSIPolicy.psm1 -Force
-Import-Module $PSScriptRoot\IoTDeviceGuardOEMCustomization.psm1 -Force
-Import-Module $PSScriptRoot\IoTDeviceGuardUtils.psm1 -Force
+﻿Import-Module $PSScriptRoot\IoTSecureBoot.psm1 -Force
+Import-Module $PSScriptRoot\IoTBitLocker.psm1 -Force
+Import-Module $PSScriptRoot\IoTSIPolicy.psm1 -Force
+Import-Module $PSScriptRoot\IoTOEMCustomization.psm1 -Force
+Import-Module $PSScriptRoot\IoTUtils.psm1 -Force
 
 $ErrorActionPreference = 'stop'
 
-function New-IotDeviceGuardPackage([string]$ConfigFileName)
+function New-IotSecurityPackage([string]$ConfigFileName)
 {
     DownloadProductionWindowsCert -ConfigFileName $ConfigFileName
     New-IoTSecureBootPackage -ConfigFileName $ConfigFileName
@@ -15,4 +15,4 @@ function New-IotDeviceGuardPackage([string]$ConfigFileName)
     New-IoTOEMCustomizationPackage -ConfigFileName $ConfigFileName
 }
 
-Export-ModuleMember -Function New-IotDeviceGuardPackage
+Export-ModuleMember -Function New-IotSecurityPackage

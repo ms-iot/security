@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = 'stop'
 
-Import-Module $PSScriptRoot\IoTDeviceGuardUtils.psm1 -Force
+Import-Module $PSScriptRoot\IoTUtils.psm1 -Force
 
 function Get-SIPolicyOutputDirectory([xml] $config)
 {
