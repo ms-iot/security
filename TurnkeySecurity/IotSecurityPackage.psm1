@@ -6,12 +6,12 @@ Import-Module $PSScriptRoot\IoTUtils.psm1 -Force
 
 $ErrorActionPreference = 'stop'
 
-function New-IotSecurityPackage([string]$ConfigFileName)
+function New-IotSecurityPackage([string]$ConfigFileName, [Boolean]$Test)
 {
     DownloadProductionWindowsCert -ConfigFileName $ConfigFileName
-    New-IoTSecureBootPackage -ConfigFileName $ConfigFileName
+    New-IoTSecureBootPackage -ConfigFileName $ConfigFileName $Test
     New-IoTBitLockerPackage -ConfigFileName $ConfigFileName
-    New-IoTSIPolicyPackage -ConfigFileName $ConfigFileName
+    New-IoTSIPolicyPackage -ConfigFileName $ConfigFileName $Test
     New-IoTOEMCustomizationPackage -ConfigFileName $ConfigFileName
 }
 

@@ -14,7 +14,7 @@ function Get-SecureBootOutputDirectory([xml] $config)
     return $OutputDir
 }
 
-function GenerateSecureBootFiles([xml] $config)
+function GenerateSecureBootFiles([xml] $config, [Boolean] $Test)
 {
     # Get tools and commmon directories
     $signtool = GetSignToolFromConfig -config $config
@@ -28,8 +28,11 @@ function GenerateSecureBootFiles([xml] $config)
     $kekpfx = (Get-Item $Config.Settings.SecureBoot.KeyExchangeKey.PFX).FullName
     $kekcert = ($Config.Settings.SecureBoot.KeyExchangeKey.Cert|Get-Item|Select-Object -Property FullName).FullName
 
-    $db = ($Config.Settings.SecureBoot.Database.Cert|Get-Item|Select-Object -Property FullName).FullName
-
+    $db = ($Config.Settings.SecureBoot.Database.Retail.Cert|Get-Item|Select-Object -Property FullName).FullName
+    if ($Test) {
+        $db += ($Config.Settings.SecureBoot.Database.Test.Cert|Get-Item|Select-Object -Property FullName).FullName
+    }
+    
     Import-Module secureboot
     # Get current time in format "yyyy-MM-ddTHH':'mm':'ss'Z'"
     $time = (Get-date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -92,7 +95,7 @@ function GenerateSecureBootFiles([xml] $config)
  .Example
    New-IotBitLockerPacage -configFileName "settings.xml"
 #>
-function New-IoTSecureBootPackage([string] $ConfigFileName)
+function New-IoTSecureBootPackage([string] $ConfigFileName, [Boolean] $Test)
 {
     $ConfigFile = Get-Item -Path $ConfigFileName
     [xml] $config = Get-Content -Path $ConfigFile
@@ -105,7 +108,7 @@ function New-IoTSecureBootPackage([string] $ConfigFileName)
         $OutputDir = Get-SecureBootOutputDirectory -config $config
 
         Copy-Item -Path "$PSScriptRoot\static-content\SecureBoot\*.*" -Destination $outputDir
-        GenerateSecureBootFiles -config $config
+        GenerateSecureBootFiles -config $config $Test
         MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.SecureBoot.wm.xml")
     }
     finally
