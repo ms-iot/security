@@ -422,7 +422,7 @@ ReadCapabilities(TPM_CC groupToRead)
         INITIALIZE_CALL_BUFFERS(TPM2_GetCapability, pGetCapabilityIn, pGetCapabilityOut);
         pGetCapabilityIn->capability = TPM_CAP_TPM_PROPERTIES;
         pGetCapabilityIn->property = nextCapToRead;
-		pGetCapabilityIn->propertyCount = PT_GROUP; // all properties in either group PT_FIXED or PT_VAR
+        pGetCapabilityIn->propertyCount = PT_GROUP; // all properties in either group PT_FIXED or PT_VAR
         EXECUTE_TPM_CALL(FALSE, TPM2_GetCapability);
 
         if (pGetCapabilityOut->moreData)
@@ -430,7 +430,7 @@ ReadCapabilities(TPM_CC groupToRead)
             moreCmdCapsToRead = TRUE;
             nextCapToRead = pGetCapabilityOut->capabilityData.data.tpmProperties.tpmProperty[pGetCapabilityOut->capabilityData.data.tpmProperties.count - 1].property + 1;
         }
-		else
+        else
         {
             moreCmdCapsToRead = FALSE;
         }
@@ -612,11 +612,11 @@ ReadCapabilities(TPM_CC groupToRead)
                                            wprintf(L"TPM_PT_AUDIT_COUNTER = %I64d\n", auditCounter);
                                            break;
             }
-			case TPM_PT_MODES:
-			{
+            case TPM_PT_MODES:
+            {
                                            wprintf(L"FIPS 140-2 Compliant? %d\n", value & 0x1);
                                            break;
-			}
+            }
             default:
             {
                        wprintf(L"%d (0x%08x)\n", value, value);
@@ -635,16 +635,16 @@ Cleanup:
 HRESULT
 GetCapabilities()
 {
-	HRESULT result;
-	wprintf(L"Capabilities:\nPT_FIXED:\n");
-	result = ReadCapabilities(PT_FIXED);
-	if (FAILED(result))
-	{
-		return result;
-	}
-	wprintf(L"\nPT_VAR:\n");
-	ReadCapabilities(PT_VAR);
-	return result;
+    HRESULT result;
+    wprintf(L"Capabilities:\nPT_FIXED:\n");
+    result = ReadCapabilities(PT_FIXED);
+    if (FAILED(result))
+    {
+        return result;
+    }
+    wprintf(L"\nPT_VAR:\n");
+    ReadCapabilities(PT_VAR);
+    return result;
 }
 
 UINT32
