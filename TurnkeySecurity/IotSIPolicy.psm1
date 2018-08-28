@@ -10,7 +10,7 @@ function Get-SIPolicyOutputDirectory([xml] $config)
     return $OutputDir
 }
 
-function GenerateInitialSIPolicy([xml] $config)
+function GenerateInitialSIPolicy([xml] $config, [Boolean] $Test)
 {
     Write-host "GenerateInitialSIPolicy ...."
 
@@ -40,6 +40,7 @@ function GenerateSIPolicy([xml] $config, [Boolean] $Test)
 
     $OutputDir = Get-SIPolicyOutputDirectory -config $config
     $IntDir = GetIntermediateDirectory -config $config
+    
 
     # Get tools
     $signtool = GetSignToolFromConfig($config)
@@ -47,7 +48,7 @@ function GenerateSIPolicy([xml] $config, [Boolean] $Test)
     $initialPolicy = $config.Settings.SIPolicy.InitialPolicy
     if (-not $initialPolicy)
     {
-        $initialPolicy = GenerateInitialSIPolicy -config $config
+        $initialPolicy = GenerateInitialSIPolicy -config $config $Test
     }
 
     Write-host "Using Initial Policy: $initialPolicy ...."
@@ -84,12 +85,16 @@ function GenerateSIPolicy([xml] $config, [Boolean] $Test)
 
     # Add 'kernel' certs
     $kernelCerts = ($Config.Settings.SIPolicy.Kernel.Retail.Cert | Get-Item).FullName
-    if ($Test) {
-        $kernelCerts += ($Config.Settings.SIPolicy.Kernel.Test.Cert | Get-Item).FullName
-    }
     foreach ($cert in $kernelCerts)
     {
         Add-SignerRule -CertificatePath $cert -FilePath $auditPolicy -kernel
+    }
+    if ($Test) {
+        $kernelCertsTest = ($Config.Settings.SIPolicy.Kernel.Test.Cert | Get-Item).FullName
+        foreach ($cert in $kernelCertsTest)
+        {
+            Add-SignerRule -CertificatePath $cert -FilePath $auditPolicy -kernel
+        }
     }
 
     ConvertFrom-CIPolicy -XmlFilePath $auditPolicy -BinaryFilePath $auditPolicyBin
@@ -153,6 +158,8 @@ function New-IoTSIPolicyPackage([string] $ConfigFileName, [Boolean] $Test)
 {
     $ConfigFile = Get-Item -Path $ConfigFileName
     [xml] $config = Get-Content -Path $ConfigFile
+    if( $Test ) { $policySuffix = "Test"; }
+    else { $policySuffix = ""; }
     
     # Change current directory to the config file Since all file paths are relative to the config file.
     Push-Location -path $ConfigFile.directory
@@ -163,7 +170,7 @@ function New-IoTSIPolicyPackage([string] $ConfigFileName, [Boolean] $Test)
 
         Copy-Item -Path "$PSScriptRoot\static-content\DeviceGuard\*.*" -Destination $outputDir
         GenerateSIPolicy $config $Test
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard.wm.xml")
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard$policySuffix.wm.xml")
     }
     finally
     {

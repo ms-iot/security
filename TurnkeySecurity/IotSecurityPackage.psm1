@@ -8,7 +8,7 @@ $ErrorActionPreference = 'stop'
 
 function New-IotSecurityPackage([string]$ConfigFileName, [Boolean]$Test)
 {
-    DownloadProductionWindowsCert -ConfigFileName $ConfigFileName
+    #DownloadProductionWindowsCert -ConfigFileName $ConfigFileName
     New-IoTSecureBootPackage -ConfigFileName $ConfigFileName $Test
     New-IoTBitLockerPackage -ConfigFileName $ConfigFileName
     New-IoTSIPolicyPackage -ConfigFileName $ConfigFileName $Test
