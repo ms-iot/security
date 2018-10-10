@@ -7,7 +7,7 @@
     </General>
     <Tools>
         <Windows10KitsRoot>C:\Program Files (x86)\Windows Kits\10\</Windows10KitsRoot>
-		<WindowsSDKVersion>10.0.15063.0</WindowsSDKVersion>
+        <WindowsSDKVersion>10.0.17134.0</WindowsSDKVersion>
     </Tools>
     <SecureBoot>
         <PlatformKey>
@@ -20,13 +20,17 @@
             <Cert>db\Microsoft Corporation KEK CA 2011.cer</Cert>
         </KeyExchangeKey>
         <Database>
-            <Cert>db\db_MSFTdevelopmentRoot.cer</Cert>
-            <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>
-            <Cert>db\db_MSFTproductionUEFIsigningCA.cer</Cert>
-            <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>
-            <Cert>db\db_MSFTproductionWindowsSigningCA2014.cer</Cert>
-            <Cert>db\db_MSFTtestSigningRoot.cer</Cert>
-            <Cert>db\db_MSFTUEFILogoTestSigner.cer</Cert>
+            <Test>
+                <Cert>db\db_MSFTdevelopmentRoot.cer</Cert>
+                <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>
+                <Cert>db\db_MSFTtestSigningRoot.cer</Cert>
+                <Cert>db\db_MSFTUEFILogoTestSigner.cer</Cert>
+            </Test>
+            <Retail>
+                <Cert>db\db_MSFTproductionUEFIsigningCA.cer</Cert>
+                <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>
+                <Cert>db\db_MSFTproductionWindowsSigningCA2014.cer</Cert>
+            </Retail>
         </Database>
     </SecureBoot>
     <BitLocker>
@@ -34,42 +38,48 @@
     </BitLocker>
     <SIPolicy>
         <!-- Update the Device Path for IPAddress: a.b.c.d using 1 or 2
-		   1. net use \\a.b.c.d\c$ /user:username password 
-		   2. Drive letter when connected through mass storage mode
-		-->
+           1. net use \\a.b.c.d\c$ /user:username password 
+           2. Drive letter when connected through mass storage mode
+        -->
         <ScanPath>\\a.b.c.d\c$</ScanPath>
         <Update>
             <PFX>Keys\OEM-PAUTH.pfx</PFX>
             <Cert>Keys\OEM-PAUTH.cer</Cert>
         </Update>
         <User>
-            <Cert>Keys\OEM-UMCI.cer</Cert>
-            <Cert>TestCerts\OEM_App_Test_Cert_2013.cer</Cert>
-            <Cert>TestCerts\MSFT_TemporaryKey.cer</Cert>
-
-            <!-- Enable this to allow all apps from the Microsoft App Store -->
-            <!--<Cert>db\MicrosoftMarketPlacePCA2011.cer</Cert>-->              <!-- Microsoft MarketPlace PCA 2011 --> 
-
-            <!-- Microsoft certificates -->
-            <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
-            <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
-            <Cert>db\MicrosoftDevelopmentPCA2014.cer</Cert>                     <!-- Microsoft Development PCA 2014 -->
-            <Cert>db\db_MSFTtestSigningRoot.cer</Cert>                          <!-- Microsoft Testing Root Certificate Authority 2010 -->
+            <Test>
+                <Cert>TestCerts\OEM_App_Test_Cert_2013.cer</Cert>
+                <Cert>TestCerts\MSFT_TemporaryKey.cer</Cert>
+                <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
+                <Cert>db\MicrosoftDevelopmentPCA2014.cer</Cert>                     <!-- Microsoft Development PCA 2014 -->
+                <Cert>db\db_MSFTtestSigningRoot.cer</Cert>                          <!-- Microsoft Testing Root Certificate Authority 2010 -->
+            </Test>
+            <Retail>
+                <Cert>Keys\OEM-UMCI.cer</Cert>
+                <!-- Enable this to allow all apps from the Microsoft App Store -->
+                <!--<Cert>db\MicrosoftMarketPlacePCA2011.cer</Cert>-->              <!-- Microsoft MarketPlace PCA 2011 --> 
+                <!-- Microsoft certificates -->
+                <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
+            </Retail>
         </User>
         <Kernel>
-            <Cert>TestCerts\MSFT-KMCI-Sample.cer</Cert>
-            <Cert>TestCerts\OEM_HAL_Extension_Test_Cert_2013.cer</Cert>
-
-            <!-- Microsoft certificates -->
-            <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
-            <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
-            <Cert>db\MicrosoftDevelopmentPCA2014.cer</Cert>                     <!-- Microsoft Development PCA 2014 -->
-            <Cert>db\db_MSFTtestSigningRoot.cer</Cert>                          <!-- Microsoft Testing Root Certificate Authority 2010 -->
+            <Test>
+                <Cert>TestCerts\MSFT-KMCI-Sample.cer</Cert>
+                <Cert>TestCerts\OEM_HAL_Extension_Test_Cert_2013.cer</Cert>
+                <!-- Microsoft certificates -->
+                <Cert>db\db_MSFTpreReleaseCandidateWindowsSigningCA.cer</Cert>      <!-- Microsoft Windows PCA 2010 -->
+                <Cert>db\MicrosoftDevelopmentPCA2014.cer</Cert>                     <!-- Microsoft Development PCA 2014 -->
+                <Cert>db\db_MSFTtestSigningRoot.cer</Cert>                          <!-- Microsoft Testing Root Certificate Authority 2010 -->
+            </Test>
+            <Retail>
+                <Cert>db\db_MSFTproductionWindowsSigningCA2011.cer</Cert>           <!-- Microsoft Windows Production PCA 2011 -->
+            </Retail>
         </Kernel>
     </SIPolicy>
     <Packaging>
         <OemName>OEM</OemName>
-        <Architecture></Architecture>
+        <!-- Architecture: Need to set one of following based on device: arm, x86, amd64, arm64 -->
+        <Architecture>x86</Architecture>
         <BspVersion>10.0.1.0</BspVersion>
         <SignToolOEMSign>/a /s my /i "Windows OEM Intermediate 2017 (TEST ONLY)" /n "Windows OEM Test Cert 2017 (TEST ONLY)" /fd SHA256</SignToolOEMSign>
     </Packaging>

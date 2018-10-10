@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = 'stop'
 
-Import-Module $PSScriptRoot\IoTDeviceGuardUtils.psm1 -Force
+Import-Module $PSScriptRoot\IoTUtils.psm1 -Force
 
 function Get-SIPolicyOutputDirectory([xml] $config)
 {
@@ -10,7 +10,7 @@ function Get-SIPolicyOutputDirectory([xml] $config)
     return $OutputDir
 }
 
-function GenerateInitialSIPolicy([xml] $config)
+function GenerateInitialSIPolicy([xml] $config, [Boolean] $Test)
 {
     Write-host "GenerateInitialSIPolicy ...."
 
@@ -34,12 +34,13 @@ function GenerateInitialSIPolicy([xml] $config)
     return $initialPolicy
 }
 
-function GenerateSIPolicy([xml] $config)
+function GenerateSIPolicy([xml] $config, [Boolean] $Test)
 {
     Write-host "GenerateSIPolicy ...."
 
     $OutputDir = Get-SIPolicyOutputDirectory -config $config
     $IntDir = GetIntermediateDirectory -config $config
+    
 
     # Get tools
     $signtool = GetSignToolFromConfig($config)
@@ -47,7 +48,7 @@ function GenerateSIPolicy([xml] $config)
     $initialPolicy = $config.Settings.SIPolicy.InitialPolicy
     if (-not $initialPolicy)
     {
-        $initialPolicy = GenerateInitialSIPolicy -config $config
+        $initialPolicy = GenerateInitialSIPolicy -config $config $Test
     }
 
     Write-host "Using Initial Policy: $initialPolicy ...."
@@ -73,17 +74,27 @@ function GenerateSIPolicy([xml] $config)
     }
 
     # Add 'user' certs
-    $userCerts = ($Config.Settings.SIPolicy.User.Cert | Get-Item).FullName
+    $userCerts = ($Config.Settings.SIPolicy.User.Retail.Cert | Get-Item).FullName
+    if ($Test) {
+        $userCerts += ($Config.Settings.SIPolicy.User.Test.Cert | Get-Item).FullName
+    }
     foreach ($cert in $userCerts)
     {
         Add-SignerRule -CertificatePath $cert -FilePath $auditPolicy -user
     }
 
     # Add 'kernel' certs
-    $kernelCerts = ($Config.Settings.SIPolicy.Kernel.Cert | Get-Item).FullName
+    $kernelCerts = ($Config.Settings.SIPolicy.Kernel.Retail.Cert | Get-Item).FullName
     foreach ($cert in $kernelCerts)
     {
         Add-SignerRule -CertificatePath $cert -FilePath $auditPolicy -kernel
+    }
+    if ($Test) {
+        $kernelCertsTest = ($Config.Settings.SIPolicy.Kernel.Test.Cert | Get-Item).FullName
+        foreach ($cert in $kernelCertsTest)
+        {
+            Add-SignerRule -CertificatePath $cert -FilePath $auditPolicy -kernel
+        }
     }
 
     ConvertFrom-CIPolicy -XmlFilePath $auditPolicy -BinaryFilePath $auditPolicyBin
@@ -143,10 +154,12 @@ function GenerateSIPolicy([xml] $config)
  .Example
    New-IotBitLockerPacage -configFileName "settings.xml"
 #>
-function New-IoTSIPolicyPackage([string] $ConfigFileName)
+function New-IoTSIPolicyPackage([string] $ConfigFileName, [Boolean] $Test)
 {
     $ConfigFile = Get-Item -Path $ConfigFileName
     [xml] $config = Get-Content -Path $ConfigFile
+    if( $Test ) { $policySuffix = "Test"; }
+    else { $policySuffix = ""; }
     
     # Change current directory to the config file Since all file paths are relative to the config file.
     Push-Location -path $ConfigFile.directory
@@ -156,8 +169,8 @@ function New-IoTSIPolicyPackage([string] $ConfigFileName)
         $OutputDir = Get-SIPolicyOutputDirectory -config $config
 
         Copy-Item -Path "$PSScriptRoot\static-content\DeviceGuard\*.*" -Destination $outputDir
-        GenerateSIPolicy $config
-        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard.wm.xml")
+        GenerateSIPolicy $config $Test
+        MakeCabSingle -config $config -PackageXml (get-item -path "$OutputDir\Security.DeviceGuard$policySuffix.wm.xml")
     }
     finally
     {
