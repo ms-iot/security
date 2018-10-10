@@ -11,21 +11,6 @@ function GetSignToolFromConfig([xml] $config)
     return $SignTool
 }
 
-function DownloadProductionWindowsCert([xml] $config)
-{
-    $certURL = "http://go.microsoft.com/fwlink/p/?linkid=321192"
-    $outputCertLocation = "$PSScriptRoot\db\db_MSFTproductionWindowsSigningCA2011.cer"
-    if (-not (Test-Path $outputCertLocation))
-    {
-        Write-Host "Downloading Windows Production cert..."
-        Invoke-WebRequest -Uri $certURL -OutFile $outputCertLocation
-        if (-not (Test-Path $outputCertLocation))
-        {
-            Write-Error "Failed to download Windows production cert. Check network connection and try again."
-        }
-    }
-}
-
 function GetpvkpfxFromConfig([xml] $config)
 {  
     $Win10KitsRoot = (get-item -path $Config.Settings.Tools.Windows10KitsRoot).FullName
