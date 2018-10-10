@@ -62,12 +62,14 @@ function GenerateSIPolicy([xml] $config, [Boolean] $Test)
     $enforcedPolicyP7b = "$OutputDir\SIPolicyOn.p7b"
 
     Copy-Item -Path $initialPolicy -Destination $auditPolicy -Force
-    
-    # Use the first update key to sign
-    $updatePfx = ($Config.Settings.SIPolicy.Update.PFX | Select-Object -first 1 | Get-Item ).FullName
 
     # Add 'update' certs
-    $updateCerts = ($Config.Settings.SIPolicy.Update.Cert | Get-Item).FullName
+    $certs = $Config.Settings.SIPolicy.Update.Cert
+    if ($null -eq $certs) {
+        Publish-Error "Update Certificate not found. Required for signing the policy."
+        return
+    }
+    $updateCerts = ($certs | Get-Item).FullName
     foreach ($cert in $updateCerts)
     {
         Add-SignerRule -CertificatePath $cert -FilePath $auditPolicy -update
@@ -98,7 +100,18 @@ function GenerateSIPolicy([xml] $config, [Boolean] $Test)
     }
 
     ConvertFrom-CIPolicy -XmlFilePath $auditPolicy -BinaryFilePath $auditPolicyBin
-    & $SignTool sign -v /f $updatePfx /p7 $IntDir /p7co 1.3.6.1.4.1.311.79.1 /fd sha256 $auditPolicyBin
+	
+    # Use the first update key to sign
+    $signcertifile = ($Config.Settings.SIPolicy.Update.Cert | Select-Object -first 1 | Get-Item).FullName
+    # X509Certificate2 object that will represent the certificate
+    $signcertobj = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+
+    # imports the certificate from file to X509Certificate object
+    $signcertobj.Import($signcertifile)
+    $signcerttp = $signcertobj.Thumbprint
+
+    & $signtool sign -v /s my /sha1 $signcerttp /p7 $IntDir /p7co 1.3.6.1.4.1.311.79.1 /fd sha256 $auditPolicyBin
+
     Copy-Item -Path "$auditPolicyBin.p7" -Destination $auditPolicyP7b
 
     Copy-Item -Path $auditPolicy -Destination $enforcedPolicy -Force
@@ -110,7 +123,7 @@ function GenerateSIPolicy([xml] $config, [Boolean] $Test)
     Set-RuleOption -FilePath $enforcedPolicy -Option 9 -Delete
 
     ConvertFrom-CIPolicy -XmlFilePath $enforcedPolicy -BinaryFilePath $enforcedPolicyBin
-    & $SignTool sign -v /f $updatePfx /p7 $IntDir /p7co 1.3.6.1.4.1.311.79.1 /fd sha256 $enforcedPolicyBin
+    & $SignTool sign -v /s my /sha1 $signcerttp /p7 $IntDir /p7co 1.3.6.1.4.1.311.79.1 /fd sha256 $enforcedPolicyBin
     Copy-Item -Path "$enforcedPolicyBin.p7" -Destination $enforcedPolicyP7b
 }
 
