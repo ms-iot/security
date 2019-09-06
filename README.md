@@ -1,26 +1,26 @@
 Windows 10 IoT Core Security
 ==============
 
-##Welcome to the Windows 10 IoT Core Security
-
 This repository includes the following projects:
 
-* ACPI Tables - contains ACPI tables for the various discrete TPMs supported on IoT Core
+* [ACPI Tables](https://github.com/ms-iot/security/tree/master/TPM-ACPITABL) - contains ACPI tables for the various discrete TPMs supported on IoT Core
 
-* CertGen & PreGen Pkgs – these contain cert and setup info for enabling Secure Boot and BitLocker
+* [CertGen & PreGen Pkgs](https://github.com/ms-iot/security/tree/master/PreGenPackage) – these contain cert and setup info for enabling Secure Boot and BitLocker
 
-* Limpet - libraries for TPM configuration & securely connecting to Azure
+* [Limpet](https://github.com/ms-iot/security/tree/master/Limpet) - libraries for TPM configuration & securely connecting to Azure
 
-* MSAAuthenticator - tool that lists IoT hubs and devices associated with user credentials
+* [MSAAuthenticator](https://github.com/ms-iot/security/tree/master/MSAAuthenticator) - tool that lists IoT hubs and devices associated with user credentials
 
-* Urchin - TPM software stack derived from the TPM2.0 library specification
+* [Urchin](https://github.com/ms-iot/security/tree/master/Urchin) - TPM software stack derived from the TPM2.0 library specification
+
+* [Turnkey Security](https://github.com/ms-iot/security/tree/master/TurnkeySecurity) - scripts to enable BitLocker, SecureBoot and DeviceGuard on Windows IoT Core retail images
 
 
-Please download, build, deploy, and contribute!!  For more information and descriptions about the samples found here, see the samples tab [here](http://ms-iot.github.io/content/en-US/win10/StartCoding.htm).
+For more information about Windows 10 IoT Core Security, see our online documentation [here](https://docs.microsoft.com/en-us/windows/iot-core/secure-your-device/buildingsecuredevices)
 
-For more information about Windows 10 IoT Core, see our online documentation [here](http://windowsondevices.com).
+For gerneral information about Windows 10 IoT Core, see our online documentation [here](http://windowsondevices.com).
 
-We are working hard to improve Windows 10 IoT Core and deeply value any feedback we get.
+We are constantly improving Windows 10 IoT Core and deeply value any feedback we get.
 
 
 
