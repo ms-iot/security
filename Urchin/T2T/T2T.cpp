@@ -246,6 +246,8 @@ TRANSLATE_TABLE FixedCapabilityNameTable[] =
     { TPM_PT_LIBRARY_COMMANDS, L"TPM_PT_LIBRARY_COMMANDS" },
     { TPM_PT_VENDOR_COMMANDS, L"TPM_PT_VENDOR_COMMANDS" },
     { TPM_PT_NV_BUFFER_MAX, L"TPM_PT_NV_BUFFER_MAX" },
+    { TPM_PT_MODES, L"TPM_PT_MODES" },
+    { TPM_PT_MAX_CAP_BUFFER, L"TPM_PT_MAX_CAP_BUFFER" },
     { TPM_PT_PERMANENT, L"TPM_PT_PERMANENT" },
     { TPM_PT_STARTUP_CLEAR, L"TPM_PT_STARTUP_CLEAR" },
     { TPM_PT_HR_NV_INDEX, L"TPM_PT_HR_NV_INDEX" },
@@ -400,14 +402,14 @@ Cleanup:
 }
 
 HRESULT
-GetCapabilities()
+ReadCapabilities(TPM_CC groupToRead)
 {
     DEFINE_CALL_BUFFERS;
     UINT32 result = TPM_RC_SUCCESS;
     GetCapability_In* pGetCapabilityIn = NULL;
     GetCapability_Out* pGetCapabilityOut = NULL;
     BOOL moreCmdCapsToRead = TRUE;
-    TPM_CC nextCapToRead = PT_FIXED;
+    TPM_CC nextCapToRead = groupToRead;
     BOOL tInVarArea = FALSE;
     char vendorString[4 * sizeof(UINT32)+1] = { 0 };
     UINT64 auditCounter = 0L;
@@ -415,14 +417,12 @@ GetCapabilities()
     ALLOCATEOBJECTMEMORY(GetCapability_In, pGetCapabilityIn);
     ALLOCATEOBJECTMEMORY(GetCapability_Out, pGetCapabilityOut);
 
-    // Read all command caps
-    wprintf(L"Capabilities:\nPT_FIXED:\n");
     do
     {
         INITIALIZE_CALL_BUFFERS(TPM2_GetCapability, pGetCapabilityIn, pGetCapabilityOut);
         pGetCapabilityIn->capability = TPM_CAP_TPM_PROPERTIES;
         pGetCapabilityIn->property = nextCapToRead;
-        pGetCapabilityIn->propertyCount = PT_GROUP * 2; // all properties in group PT_FIXED and PT_VAR
+        pGetCapabilityIn->propertyCount = PT_GROUP; // all properties in either group PT_FIXED or PT_VAR
         EXECUTE_TPM_CALL(FALSE, TPM2_GetCapability);
 
         if (pGetCapabilityOut->moreData)
@@ -434,18 +434,13 @@ GetCapabilities()
         {
             moreCmdCapsToRead = FALSE;
         }
+
         for (UINT32 n = 0; n < pGetCapabilityOut->capabilityData.data.tpmProperties.count; n++)
         {
             TPM_PT cap = pGetCapabilityOut->capabilityData.data.tpmProperties.tpmProperty[n].property;
             UINT32 value = pGetCapabilityOut->capabilityData.data.tpmProperties.tpmProperty[n].value;
             PBYTE pCharValue = (PBYTE)&value;
             TRANSLATE_TABLE* pCap = ResolveString(FixedCapabilityNameTable, cap);
-
-            if ((cap >= PT_VAR) && (!tInVarArea))
-            {
-                wprintf(L"\nPT_VAR:\n");
-                tInVarArea = TRUE;
-            }
 
             if ((cap != TPM_PT_VENDOR_STRING_1) &&
                 (cap != TPM_PT_VENDOR_STRING_2) &&
@@ -617,6 +612,11 @@ GetCapabilities()
                                            wprintf(L"TPM_PT_AUDIT_COUNTER = %I64d\n", auditCounter);
                                            break;
             }
+            case TPM_PT_MODES:
+            {
+                                           wprintf(L"FIPS 140-2 Compliant? %d\n", value & 0x1);
+                                           break;
+            }
             default:
             {
                        wprintf(L"%d (0x%08x)\n", value, value);
@@ -630,6 +630,21 @@ Cleanup:
     FREEOBJECTMEMORY(pGetCapabilityIn);
     FREEOBJECTMEMORY(pGetCapabilityOut);
     return (HRESULT)result;
+}
+
+HRESULT
+GetCapabilities()
+{
+    HRESULT result;
+    wprintf(L"Capabilities:\nPT_FIXED:\n");
+    result = ReadCapabilities(PT_FIXED);
+    if (FAILED(result))
+    {
+        return result;
+    }
+    wprintf(L"\nPT_VAR:\n");
+    ReadCapabilities(PT_VAR);
+    return result;
 }
 
 UINT32
