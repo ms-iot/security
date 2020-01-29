@@ -908,7 +908,8 @@ TPM2B_ID_OBJECT     *outIDObject    // OUT: output credential
 
 // Windows8 defined TPM 2.0 default Template
 void SetEkTemplate(
-    TPM2B_PUBLIC *publicArea
+    TPM2B_PUBLIC *publicArea,
+    UINT16 rsaKeyBitsSize
     )
 {
     const BYTE TPM_20_EK_AUTH_POLICY[] =  // 'PolicySecret(TPM_RH_ENDORSEMENT)'
@@ -924,7 +925,7 @@ void SetEkTemplate(
                sizeof(TPM_20_EK_AUTH_POLICY),
                sizeof(publicArea->t.publicArea.authPolicy.t.buffer));
     publicArea->t.publicArea.authPolicy.t.size = sizeof(TPM_20_EK_AUTH_POLICY);
-    publicArea->t.publicArea.unique.rsa.t.size = MAX_RSA_KEY_BITS / 8;
+    publicArea->t.publicArea.unique.rsa.t.size = rsaKeyBitsSize / 8;
     publicArea->t.publicArea.type = TPM_ALG_RSA;
     publicArea->t.publicArea.nameAlg = TPM_ALG_SHA256;
     publicArea->t.publicArea.objectAttributes.fixedTPM = SET;
@@ -933,7 +934,7 @@ void SetEkTemplate(
     publicArea->t.publicArea.objectAttributes.adminWithPolicy = SET;
     publicArea->t.publicArea.objectAttributes.restricted = SET;
     publicArea->t.publicArea.objectAttributes.decrypt = SET;
-    publicArea->t.publicArea.parameters.rsaDetail.keyBits = MAX_RSA_KEY_BITS;
+    publicArea->t.publicArea.parameters.rsaDetail.keyBits = rsaKeyBitsSize;
     publicArea->t.publicArea.parameters.rsaDetail.exponent = 0;
     publicArea->t.publicArea.parameters.rsaDetail.scheme.scheme = TPM_ALG_NULL;
     publicArea->t.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM_ALG_AES;
@@ -942,7 +943,8 @@ void SetEkTemplate(
 };
 
 void SetSrkTemplate(
-    TPM2B_PUBLIC *publicArea
+    TPM2B_PUBLIC *publicArea,
+    UINT16 rsaKeyBitsSize
     )
 {
     if (publicArea == NULL) return;
@@ -955,13 +957,13 @@ void SetSrkTemplate(
     publicArea->t.publicArea.objectAttributes.noDA = SET;
     publicArea->t.publicArea.objectAttributes.restricted = SET;
     publicArea->t.publicArea.objectAttributes.decrypt = SET;
-    publicArea->t.publicArea.parameters.rsaDetail.keyBits = MAX_RSA_KEY_BITS;
+    publicArea->t.publicArea.parameters.rsaDetail.keyBits = rsaKeyBitsSize;
     publicArea->t.publicArea.parameters.rsaDetail.exponent = 0;
     publicArea->t.publicArea.parameters.rsaDetail.scheme.scheme = TPM_ALG_NULL;
     publicArea->t.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM_ALG_AES;
     publicArea->t.publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
     publicArea->t.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM_ALG_CFB;
-    publicArea->t.publicArea.unique.rsa.t.size = MAX_RSA_KEY_BITS / 8;
+    publicArea->t.publicArea.unique.rsa.t.size = rsaKeyBitsSize / 8;
 };
 
 //*** ObjectComputeName()
