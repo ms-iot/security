@@ -300,23 +300,43 @@ typedef struct {
 #define    CC_EC_Ephemeral                  YES    // 1
 
 // Table 215 -- RSA Algorithm Constants
-#define    RSA_KEY_SIZES_BITS    {1024, 2048, 3072, 4096}    // {1024,2048,3072,4096}
+#if        defined(ENABLE_RSA_4096)
 #define    MAX_RSA_KEY_BITS      4096
+#define    RSA_KEY_SIZES_BITS    {1024, 2048, 3072, 4096}    // {1024,2048,3072,4096}
+#elif      defined(ENABLE_RSA_3072)
+#define    MAX_RSA_KEY_BITS      3072
+#define    RSA_KEY_SIZES_BITS    {1024, 2048, 3072}    // {1024,2048,3072}
+#else
+#define    MAX_RSA_KEY_BITS      2048
+#define    RSA_KEY_SIZES_BITS    {1024, 2048}    // {1024}
+#endif
+
 #define    RSA_KEY_BYTES(bits)   ((bits + 7) / 8)
-#define    MAX_RSA_KEY_BYTES     RSA_KEY_BYTES(MAX_RSA_KEY_BITS)    // 512
+#define    MAX_RSA_KEY_BYTES     RSA_KEY_BYTES(MAX_RSA_KEY_BITS)
+
 enum RSA_KEY_TYPE
 {
     RSA_1024 = 0,    // RSA_1024
     RSA_2048,        // RSA_2048
+#if defined(ENABLE_RSA_3072) || defined(ENABLE_RSA_4096)
     RSA_3072,        // RSA_3072
+#endif
+#if defined(ENABLE_RSA_4096)
     RSA_4096,        // RSA_4096
+#endif
     RSA_KEY_TYPE_MAX
 };
+
 static const UINT16 RSA_KEYBITS[RSA_KEY_TYPE_MAX] = RSA_KEY_SIZES_BITS;
+
 #define    RSA_1024_KEYBITS    RSA_KEYBITS[RSA_1024]
 #define    RSA_2048_KEYBITS    RSA_KEYBITS[RSA_2048]
+#if        defined(ENABLE_RSA_3072) || defined(ENABLE_RSA_4096)
 #define    RSA_3072_KEYBITS    RSA_KEYBITS[RSA_3072]
+#endif
+#if        defined(ENABLE_RSA_4096)
 #define    RSA_4096_KEYBITS    RSA_KEYBITS[RSA_4096]
+#endif
 
 // Table 216 -- ECC Algorithm Constants
 #define    ECC_CURVES            {\
