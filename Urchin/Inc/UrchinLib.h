@@ -300,6 +300,9 @@ typedef struct {
 #define    CC_EC_Ephemeral                  YES    // 1
 
 // Table 215 -- RSA Algorithm Constants
+// Build with ENABLE_RSA_4096 defined to enable creating RSA keys upto 4096 bits
+// Build with ENABLE_RSA_3072 defined to enable creating RSA keys upto 3072 bits
+// Without any of the flags mentioned above, MAX_RSA_KEY_BITS = 2048 which enables creating RSA keys upto 2048 bits
 #if        defined(ENABLE_RSA_4096)
 #define    MAX_RSA_KEY_BITS      4096
 #define    RSA_KEY_SIZES_BITS    {1024, 2048, 3072, 4096}    // {1024,2048,3072,4096}
