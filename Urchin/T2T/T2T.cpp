@@ -1403,11 +1403,19 @@ TestAES128Key()
     pCreateIn->inPublic.t.publicArea.objectAttributes.userWithAuth = 1;
     pCreateIn->inPublic.t.publicArea.objectAttributes.noDA = 1;
     pCreateIn->inPublic.t.publicArea.objectAttributes.decrypt = 1;
+    pCreateIn->inPublic.t.publicArea.objectAttributes.sign = 1;
     pCreateIn->inPublic.t.publicArea.parameters.symDetail.algorithm = TPM_ALG_AES;
     pCreateIn->inPublic.t.publicArea.parameters.symDetail.keyBits.aes = MAX_AES_KEY_BITS;
     pCreateIn->inPublic.t.publicArea.parameters.symDetail.mode.aes = TPM_ALG_CBC;
     startTime = GetTickCount64();
-    EXECUTE_TPM_CALL(FALSE, TPM2_Create);
+    TRY_TPM_CALL(FALSE, TPM2_Create);
+    if (result != TPM_RC_SUCCESS)
+    {
+        // Older TPM spec rev does not understand sign as flag for Encrypt. Retry without it.
+        pCreateIn->inPublic.t.publicArea.objectAttributes.sign = 0;
+        startTime = GetTickCount64();
+        EXECUTE_TPM_CALL(FALSE, TPM2_Create);
+    }
     stopTime = GetTickCount64();
     aesKey.obj.publicArea = pCreateOut->outPublic;
     aesKey.obj.privateArea = pCreateOut->outPrivate;
